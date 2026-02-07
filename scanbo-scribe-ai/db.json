@@ -1,0 +1,59 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "demo.doctor",
+      "password": "Scanbo@123",
+      "name": "Demo Doctor",
+      "role": "Physician"
+    }
+  ],
+  "patients": [
+    {
+      "id": 1,
+      "fullName": "Riya Sharma",
+      "age": 34,
+      "gender": "Female",
+      "phone": "9876543210",
+      "address": "Bengaluru",
+      "aadhaar": "1234-5678-9012",
+      "mrn": "MRN-1001"
+    },
+    {
+      "id": 2,
+      "fullName": "Arjun Mehta",
+      "age": 52,
+      "gender": "Male",
+      "phone": "9123456789",
+      "address": "Mumbai",
+      "aadhaar": "2345-6789-0123",
+      "mrn": "MRN-1002"
+    },
+    {
+      "fullName": "Rinku",
+      "age": null,
+      "gender": "sup",
+      "phone": "09608610873",
+      "address": "It Park",
+      "aadhaar": "",
+      "mrn": "7045348191",
+      "id": 3
+    }
+  ],
+  "consultations": [
+    {
+      "id": 1,
+      "patientId": 1,
+      "startedAt": "2025-12-10T09:15:00.000Z",
+      "status": "Draft",
+      "summary": "Follow-up visit for persistent cough."
+    },
+    {
+      "id": 2,
+      "patientId": 2,
+      "startedAt": "2025-12-11T14:40:00.000Z",
+      "status": "Final",
+      "summary": "Hypertension review and medication adjustment."
+    }
+  ]
+}
