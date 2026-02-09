@@ -60,9 +60,9 @@ const PanelActions = styled(Stack)(({ theme }) => ({
   width: "100%"
 }));
 
-const DeleteWrap = styled(Box)(() => ({
+const DeleteWrap = styled(Box)({
   marginLeft: "auto"
-}));
+});
 
 const SelectAllWrap = styled(Stack)(({ theme }) => ({
   flexDirection: "row",
@@ -122,18 +122,18 @@ const RecordingAvatar = styled(Box)(({ theme }) => ({
   placeItems: "center"
 }));
 
-const RecordingMeta = styled(Stack)(() => ({
+const RecordingMeta = styled(Stack)({
   gap: 2,
   minWidth: 0
-}));
+});
 
-const RecordingTime = styled(Typography)(() => ({
+const RecordingTime = styled(Typography)({
   whiteSpace: "nowrap"
-}));
+});
 
-const RecordingName = styled(Typography)(() => ({
+const RecordingName = styled(Typography)({
   whiteSpace: "nowrap"
-}));
+});
 
 const ListCheckbox = styled(Checkbox)(({ theme }) => ({
   padding: 0,
@@ -171,14 +171,14 @@ const TitleRow = styled(Stack)(({ theme }) => ({
   gap: theme.spacing(1.5)
 }));
 
-const TitleName = styled(Typography)(() => ({
+const TitleName = styled(Typography)({
   fontWeight: 700,
   letterSpacing: 0.5
-}));
+});
 
-const TitleMeta = styled(Typography)(() => ({
+const TitleMeta = styled(Typography)({
   fontWeight: 500
-}));
+});
 
 const ActionRow = styled(Stack)(({ theme }) => ({
   flexDirection: "row",
@@ -227,10 +227,10 @@ const BarRow = styled(Stack)(({ theme }) => ({
   width: "100%"
 }));
 
-const LabelText = styled(Typography)(() => ({
+const LabelText = styled(Typography)({
   gridColumn: "3",
   gridRow: "1"
-}));
+});
 
 const ProgressSlider = styled(Slider)(({ theme }) => ({
   width: "100%",
@@ -249,11 +249,11 @@ const ProgressSlider = styled(Slider)(({ theme }) => ({
   }
 }));
 
-const TimeRow = styled(Stack)(() => ({
+const TimeRow = styled(Stack)({
   flexDirection: "row",
   alignItems: "center",
   justifyContent: "space-between"
-}));
+});
 
 const PlayerControls = styled(Stack)(({ theme }) => ({
   gridColumn: "2 / span 2",
@@ -334,13 +334,13 @@ const ToggleChip = styled(Chip, {
   color: active ? theme.palette.primary.contrastText : theme.palette.text.secondary
 }));
 
-const ParagraphText = styled(Typography)(() => ({
+const ParagraphText = styled(Typography)({
   lineHeight: 1.6
-}));
+});
 
-const SectionLabel = styled(Typography)(() => ({
+const SectionLabel = styled(Typography)({
   fontWeight: 600
-}));
+});
 
 type Recording = {
   id: string;

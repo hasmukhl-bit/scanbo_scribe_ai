@@ -3,7 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 
 const jsonServerUrl = process.env.JSON_SERVER_URL || "http://localhost:4000";
 
-export const authOptions: NextAuthOptions = {
+const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",

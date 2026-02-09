@@ -14,9 +14,9 @@ import {
 import { alpha } from "@mui/material/styles";
 import Link from "next/link";
 
-const PageRoot = styled("main")(() => ({
+const PageRoot = styled("main")({
   width: "100%"
-}));
+});
 
 const Background = styled(Box)(({ theme }) => ({
   minHeight: "100vh",
@@ -74,35 +74,35 @@ const NetworkBg = styled(Box, {
   backgroundImage: `url(${bg})`
 }));
 
-const LeftContent = styled(Box)(() => ({
+const LeftContent = styled(Box)({
   position: "relative",
   zIndex: 1
-}));
+});
 
-const Overline = styled(Typography)(() => ({
+const Overline = styled(Typography)({
   letterSpacing: 2
-}));
+});
 
-const SectionTitle = styled(Typography)(() => ({
+const SectionTitle = styled(Typography)({
   fontWeight: 700,
   marginTop: 8
-}));
+});
 
-const LeadText = styled(Typography)(() => ({
+const LeadText = styled(Typography)({
   marginTop: 12,
   maxWidth: 520
-}));
+});
 
-const SubText = styled(Typography)(() => ({
+const SubText = styled(Typography)({
   marginTop: 12,
   maxWidth: 520
-}));
+});
 
-const HighlightCardWrapper = styled(Box)(() => ({
+const HighlightCardWrapper = styled(Box)({
   position: "relative",
   zIndex: 1,
   width: 540
-}));
+});
 
 const HighlightCard = styled(Card)(({ theme }) => ({
   padding: theme.spacing(3)
@@ -149,24 +149,24 @@ const RightCard = styled(Card)(({ theme }) => ({
   }
 }));
 
-const RightCardContent = styled(Box)(() => ({
+const RightCardContent = styled(Box)({
   height: "100%",
   display: "flex",
   alignItems: "center"
-}));
+});
 
-const RightInner = styled(Stack)(() => ({
+const RightInner = styled(Stack)({
   width: "100%",
   justifyContent: "center"
-}));
+});
 
-const Title = styled(Typography)(() => ({
+const Title = styled(Typography)({
   fontWeight: 700
-}));
+});
 
-const Subtitle = styled(Typography)(() => ({
+const Subtitle = styled(Typography)({
   marginTop: 8
-}));
+});
 
 const StyledTextField = styled(TextField)(({ theme }) => ({
   "& .MuiOutlinedInput-root": {
@@ -187,9 +187,9 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
   }
 }));
 
-const BoldSubtitle = styled(Typography)(() => ({
+const BoldSubtitle = styled(Typography)({
   fontWeight: 600
-}));
+});
 
 const networkPattern =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='700' height='500' viewBox='0 0 700 500'><g fill='none' stroke='%2390c7ff' stroke-width='1'><path d='M40 60 L160 30 L240 120 L120 180 Z'/><path d='M200 70 L320 40 L420 120 L300 180 Z'/><path d='M420 70 L560 40 L660 120 L520 180 Z'/><path d='M80 210 L220 190 L300 280 L160 330 Z'/><path d='M300 210 L440 190 L520 280 L380 330 Z'/><path d='M80 360 L200 340 L260 420 L120 450 Z'/></g><g fill='%2390c7ff'><circle cx='40' cy='60' r='3'/><circle cx='160' cy='30' r='3'/><circle cx='240' cy='120' r='3'/><circle cx='120' cy='180' r='3'/><circle cx='200' cy='70' r='3'/><circle cx='320' cy='40' r='3'/><circle cx='420' cy='120' r='3'/><circle cx='300' cy='180' r='3'/><circle cx='420' cy='70' r='3'/><circle cx='560' cy='40' r='3'/><circle cx='660' cy='120' r='3'/><circle cx='520' cy='180' r='3'/><circle cx='80' cy='210' r='3'/><circle cx='220' cy='190' r='3'/><circle cx='300' cy='280' r='3'/><circle cx='160' cy='330' r='3'/><circle cx='300' cy='210' r='3'/><circle cx='440' cy='190' r='3'/><circle cx='520' cy='280' r='3'/><circle cx='380' cy='330' r='3'/><circle cx='80' cy='360' r='3'/><circle cx='200' cy='340' r='3'/><circle cx='260' cy='420' r='3'/><circle cx='120' cy='450' r='3'/></g></svg>";
