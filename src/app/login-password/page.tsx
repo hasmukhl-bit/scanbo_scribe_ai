@@ -19,7 +19,6 @@ import { alpha } from "@mui/material/styles";
 import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 const PageRoot = styled("main")({
@@ -213,17 +212,6 @@ const LoginSubtitle = styled(Typography)({
   marginTop: 8
 });
 
-const GoogleIcon = styled("img")({
-  width: 20,
-  height: 20
-});
-
-const AppleIcon = styled("img")({
-  width: 22,
-  height: 22,
-  display: "block"
-});
-
 const FormLabel = styled(Typography)({
   fontWeight: 600
 });
@@ -252,34 +240,6 @@ const SignInButton = styled(Button)({
   fontWeight: 600
 });
 
-const GoogleButton = styled(Button)(({ theme }) => ({
-  borderColor: theme.palette.divider,
-  backgroundColor: alpha(theme.palette.primary.main, 0.03),
-  color: theme.palette.text.primary,
-  fontWeight: 600,
-  textTransform: "none",
-  "&:hover": {
-    borderColor: theme.palette.divider,
-    backgroundColor: alpha(theme.palette.primary.main, 0.06)
-  }
-}));
-
-const AppleButton = styled(Button)({
-  backgroundColor: "#1f2937",
-  color: "#ffffff",
-  fontWeight: 600,
-  textTransform: "none",
-  overflow: "visible",
-  "& .MuiButton-startIcon": {
-    marginLeft: 0,
-    marginRight: 8,
-    overflow: "visible"
-  },
-  "&:hover": {
-    backgroundColor: "#111827"
-  }
-});
-
 const LegalText = styled(Typography)({
   maxWidth: 360
 });
@@ -293,31 +253,17 @@ export default function LoginPasswordPage() {
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
-  const [error, setError] = React.useState("");
-  const jsonServerUrl =
-    process.env.NEXT_PUBLIC_JSON_SERVER_URL || "http://localhost:4000";
 
   const handlePasswordLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setError("");
     setSubmitting(true);
 
     try {
-      const response = await fetch(
-        `${jsonServerUrl}/users?username=${encodeURIComponent(
-          username
-        )}&password=${encodeURIComponent(password)}`,
-        { cache: "no-store" }
+      localStorage.setItem(
+        "scanbo-user",
+        JSON.stringify({ username: username || "demo.doctor" })
       );
-      const users = await response.json();
-      if (Array.isArray(users) && users.length > 0) {
-        localStorage.setItem("scanbo-user", JSON.stringify(users[0]));
-        router.push("/my-recordings");
-      } else {
-        setError("Invalid username or password.");
-      }
-    } catch {
-      setError("Unable to sign in. Please try again.");
+      router.push("/my-recordings");
     } finally {
       setSubmitting(false);
     }
@@ -495,46 +441,6 @@ export default function LoginPasswordPage() {
                   >
                     {submitting ? "Signing in..." : "Sign in"}
                   </SignInButton>
-
-                  {error ? (
-                    <Typography variant="body2" color="error">
-                      {error}
-                    </Typography>
-                  ) : null}
-
-                  <Typography variant="body2" color="text.secondary" align="center">
-                    or sign in with Google
-                  </Typography>
-
-                  <Stack spacing={1.5}>
-                    <GoogleButton
-                      variant="outlined"
-                      size="large"
-                      fullWidth
-                      startIcon={
-                        <GoogleIcon
-                          alt="Google"
-                          src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 533.5 544.3'><path fill='%234285f4' d='M533.5 278.4c0-17.4-1.4-34-4.1-50.2H272v95.1h146.9c-6.3 34.2-25 63.2-53.4 82.7v68h86.5c50.7-46.7 81.5-115.5 81.5-195.6z'/><path fill='%2334a853' d='M272 544.3c72.6 0 133.5-24.1 178-65.4l-86.5-68c-24.1 16.2-54.9 25.8-91.5 25.8-70.4 0-130.1-47.6-151.5-111.6H31.5v70.2C75.7 482.1 167.9 544.3 272 544.3z'/><path fill='%23fbbc04' d='M120.5 325.1c-10.1-30.2-10.1-62.6 0-92.8V162H31.5c-37.4 73.9-37.4 162.4 0 236.3l89-73.2z'/><path fill='%23ea4335' d='M272 107.7c39.5-.6 77.5 14 106.6 40.9l79.4-79.4C411.5 24.8 342.7-1.5 272 0 167.9 0 75.7 62.2 31.5 162l89 70.2C141.9 155.3 201.6 107.7 272 107.7z'/></svg>"
-                        />
-                      }
-                      onClick={() => signIn("google", { callbackUrl: "/my-recordings" })}
-                    >
-                      Sign in with Google
-                    </GoogleButton>
-                    <AppleButton
-                      variant="contained"
-                      size="large"
-                      fullWidth
-                      startIcon={
-                        <AppleIcon
-                          alt="Apple"
-                          src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 305 305'><path fill='%23ffffff' d='M40.74 188.29c-1.69 36.68 32.17 71.63 70.42 70.9 8.17-.15 16.04-1.36 23.46-4.51 6.92-2.92 13.3-7.3 21.36-7.3 8.26 0 14.16 4.22 21.29 7.21 7.67 3.2 15.73 4.5 24.03 4.2 35.51-1.35 66.77-32.28 69.44-68.16-18.65-8.41-31.76-28.12-31.52-48.84.24-20.68 13.9-39.92 32.99-47.87-9.75-14.12-28.04-22.1-45.65-22.46-17.26-.35-33.31 9.38-41.83 9.38-9.1 0-22.96-9.03-37.74-8.77-19.28.3-37.28 11.44-47.23 28.79-10.29 17.9-13.22 40.68-10.02 63.43zM204.11 40.52c9.16-11.14 15.22-26.44 13.49-41.52-13.24.54-29.09 8.81-38.51 19.69-8.58 9.86-15.65 25.75-13.7 40.9 14.75 1.1 29.63-7.48 38.72-19.07z'/></svg>"
-                        />
-                      }
-                    >
-                      Sign in with Apple
-                    </AppleButton>
-                  </Stack>
 
                   <LegalText variant="body2" color="text.secondary">
                     By continuing, you agree to secure handling of PHI and
