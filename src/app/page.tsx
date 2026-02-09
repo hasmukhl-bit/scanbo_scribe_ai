@@ -1,8 +1,7 @@
 "use client";
 
-import styled from "@emotion/styled";
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
-import { alpha } from "@mui/material/styles";
+import { alpha, styled } from "@mui/material/styles";
 import Link from "next/link";
 
 const PageRoot = styled("main")(() => ({
@@ -33,9 +32,6 @@ const Overline = styled(Typography)(() => ({
   letterSpacing: 2
 }));
 
-const Title = styled(Typography)(() => ({
-  fontWeight: 700
-}));
 
 export default function LandingPage() {
   return (
@@ -44,10 +40,10 @@ export default function LandingPage() {
         <Container maxWidth="lg">
           <ContentStack spacing={4} alignItems="flex-start">
             <Overline variant="overline">Scanbo Scribe AI</Overline>
-            <Title variant="h2" component="h1">
+            <Typography variant="h2" component="h1" sx={{ fontWeight: 700 }}>
               Effortlessly create comprehensive and accurate patient notes from
               your voice recordings
-            </Title>
+            </Typography>
             <Typography variant="h6" color="text.secondary">
               Turn raw audio into structured, compliant clinical documentation
               in minutes. Capture every detail, reduce burnout, and focus on
