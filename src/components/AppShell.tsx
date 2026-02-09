@@ -405,7 +405,9 @@ export default function AppShell({ title, subtitle, children, active }: AppShell
           {sidebarOpen ? (
             <SidebarContent spacing={2}>
               <SidebarActions>
-                <PrimaryActionButton>+ Start Consult</PrimaryActionButton>
+                <PrimaryActionButton component={Link} href="/start-consult">
+                  + Start Consult
+                </PrimaryActionButton>
               </SidebarActions>
 
               <NavSection>
@@ -471,7 +473,7 @@ export default function AppShell({ title, subtitle, children, active }: AppShell
               <CollapsedIconStack>
                 <CollapsedActionStack>
                   <CollapsedIconButton>
-                    <IconLink href="/consultation">
+                    <IconLink href="/start-consult">
                       <IconTile active tone="primary">
                         <AddIcon fontSize="small" />
                       </IconTile>

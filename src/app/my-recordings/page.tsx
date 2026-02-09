@@ -26,6 +26,7 @@ import Forward10RoundedIcon from "@mui/icons-material/Forward10Rounded";
 import VolumeUpOutlinedIcon from "@mui/icons-material/VolumeUpOutlined";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import AppShell from "@/components/AppShell";
+import { useRouter } from "next/navigation";
 
 const PageGrid = styled(Box)(({ theme }) => ({
   display: "grid",
@@ -357,6 +358,7 @@ type Recording = {
 };
 
 export default function HomePage() {
+  const router = useRouter();
   const initialRecordings: Recording[] = [
     {
       id: "hv",
@@ -687,7 +689,9 @@ export default function HomePage() {
               ) : null}
             </TitleRow>
             <ActionRow>
-              <SecondaryPill>Start New Consult</SecondaryPill>
+              <SecondaryPill onClick={() => router.push("/start-consult")}>
+                Start New Consult
+              </SecondaryPill>
             </ActionRow>
           </DetailHeader>
 

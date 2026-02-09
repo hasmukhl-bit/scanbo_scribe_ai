@@ -56,20 +56,7 @@
       "summary": "Hypertension review and medication adjustment."
     }
   ],
-  "guestAttempts": [
-    {
-      "createdAt": "2026-02-09T11:57:08.778Z",
-      "id": 1
-    },
-    {
-      "createdAt": "2026-02-09T11:58:21.247Z",
-      "id": 2
-    },
-    {
-      "createdAt": "2026-02-09T12:02:00.666Z",
-      "id": 3
-    }
-  ],
+  "guestAttempts": [],
   "recordings": [],
   "clinicalInsights": [
     {

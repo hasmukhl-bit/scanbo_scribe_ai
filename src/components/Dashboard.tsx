@@ -191,7 +191,7 @@ export default function Dashboard({ mode }: DashboardProps) {
               <LeftActionPanel>
                 <StartConsultButton
                   variant="contained"
-                  onClick={() => router.push("/consultation")}
+                  onClick={() => router.push("/start-consult")}
                 >
                   + Start Consult
                 </StartConsultButton>
