@@ -405,9 +405,22 @@ export default function AppShell({ title, subtitle, children, active }: AppShell
           {sidebarOpen ? (
             <SidebarContent spacing={2}>
               <SidebarActions>
-                <PrimaryActionButton component={Link} href="/start-consult">
-                  + Start Consult
-                </PrimaryActionButton>
+                <Link href="/start-consult" passHref legacyBehavior>
+                  <Button
+                    component="a"
+                    variant="contained"
+                    sx={{
+                      textTransform: "none",
+                      fontWeight: 600,
+                      borderRadius: 12,
+                      padding: (theme) => theme.spacing(1, 2),
+                      backgroundColor: "primary.main",
+                      "&:hover": { backgroundColor: "primary.dark" }
+                    }}
+                  >
+                    + Start Consult
+                  </Button>
+                </Link>
               </SidebarActions>
 
               <NavSection>
