@@ -719,8 +719,9 @@ const FooterLogo = styled("img")(() => ({
   height: 40
 }));
 
-const FooterLink = styled(Typography)(() => ({
-  color: "#cbd5f5"
+const FooterLink = styled(Link)(() => ({
+  color: "#cbd5f5",
+  textDecoration: "none"
 }));
 
 const SocialRow = styled(Box)(({ theme }) => ({
@@ -1738,18 +1739,10 @@ export default function LandingPage() {
                     Product
                   </Typography>
                   <Stack spacing={1} sx={{ mt: 1 }}>
-                    <FooterLink component={Link} href="/how-it-works" variant="body2">
-                      How it works
-                    </FooterLink>
-                    <FooterLink component={Link} href="/security" variant="body2">
-                      Security
-                    </FooterLink>
-                    <FooterLink component={Link} href="/integrations" variant="body2">
-                      Integrations
-                    </FooterLink>
-                    <FooterLink component={Link} href="/pricing" variant="body2">
-                      Pricing
-                    </FooterLink>
+                    <FooterLink href="/how-it-works">How it works</FooterLink>
+                    <FooterLink href="/security">Security</FooterLink>
+                    <FooterLink href="/integrations">Integrations</FooterLink>
+                    <FooterLink href="/pricing">Pricing</FooterLink>
                   </Stack>
                 </Box>
 
@@ -1758,18 +1751,10 @@ export default function LandingPage() {
                     Company
                   </Typography>
                   <Stack spacing={1} sx={{ mt: 1 }}>
-                    <FooterLink component={Link} href="/about" variant="body2">
-                      About
-                    </FooterLink>
-                    <FooterLink component={Link} href="/announcements" variant="body2">
-                      Announcements
-                    </FooterLink>
-                    <FooterLink component={Link} href="/careers" variant="body2">
-                      Careers
-                    </FooterLink>
-                    <FooterLink component={Link} href="/contact" variant="body2">
-                      Contact
-                    </FooterLink>
+                    <FooterLink href="/about">About</FooterLink>
+                    <FooterLink href="/announcements">Announcements</FooterLink>
+                    <FooterLink href="/careers">Careers</FooterLink>
+                    <FooterLink href="/contact">Contact</FooterLink>
                   </Stack>
                 </Box>
 
