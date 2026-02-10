@@ -277,16 +277,19 @@ const PhoneMock = styled(Box)(({ theme }) => ({
   overflow: "hidden"
 }));
 
-const PhoneScreen = styled(Box)(({ theme }) => ({
+const PhoneScreen = styled(Box)(() => ({
   position: "absolute",
   inset: 16,
   borderRadius: 20,
-  background: "linear-gradient(180deg, rgba(56,189,248,0.18), rgba(15,23,42,0.9))",
+  background: "#0b1220",
   border: "1px solid rgba(56,189,248,0.25)",
-  display: "grid",
-  placeItems: "center",
-  color: "#cbd5f5",
-  fontWeight: 600
+  overflow: "hidden"
+}));
+
+const PhonePreview = styled("img")(() => ({
+  width: "100%",
+  height: "100%",
+  objectFit: "cover"
 }));
 
 const StoreButton = styled(Button)(({ theme }) => ({
@@ -605,7 +608,7 @@ export default function LandingPage() {
   const chunksRef = React.useRef<Blob[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const [menuAnchor, setMenuAnchor] = React.useState<null | HTMLElement>(null);
-  const [showHeaderBrand, setShowHeaderBrand] = React.useState(false);
+  const [showHeaderBrand, setShowHeaderBrand] = React.useState(true);
 
   const menuOpen = Boolean(menuAnchor);
 
@@ -615,9 +618,9 @@ export default function LandingPage() {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setShowHeaderBrand(!entry.isIntersecting);
+        setShowHeaderBrand(entry.intersectionRatio < 1);
       },
-      { threshold: 0.4 }
+      { threshold: [1] }
     );
 
     observer.observe(element);
@@ -916,7 +919,12 @@ export default function LandingPage() {
                 </QrGrid>
               </Stack>
               <PhoneMock>
-                <PhoneScreen>ScanboScribe Mobile</PhoneScreen>
+                <PhoneScreen>
+                  <PhonePreview
+                    src="/scanbo-scribeai-mobile-ui.png"
+                    alt="ScanboScribe AI mobile preview"
+                  />
+                </PhoneScreen>
               </PhoneMock>
             </AppSection>
           </Section>
