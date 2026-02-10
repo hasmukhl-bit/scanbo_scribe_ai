@@ -9,8 +9,6 @@ import {
   Container,
   Divider,
   IconButton,
-  Menu,
-  MenuItem,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -19,7 +17,6 @@ import {
   Typography
 } from "@mui/material";
 import { alpha, styled } from "@mui/material/styles";
-import MenuIcon from "@mui/icons-material/Menu";
 import MicNoneOutlinedIcon from "@mui/icons-material/MicNoneOutlined";
 import GraphicEqOutlinedIcon from "@mui/icons-material/GraphicEqOutlined";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
@@ -28,11 +25,14 @@ import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import GppGoodOutlinedIcon from "@mui/icons-material/GppGoodOutlined";
 import AddIcon from "@mui/icons-material/Add";
+import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import XIcon from "@mui/icons-material/X";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import InstagramIcon from "@mui/icons-material/Instagram";
+import Link from "next/link";
 import { apiGet, apiPost } from "@/lib/api";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 const PageRoot = styled("main")(() => ({
   width: "100%"
@@ -96,20 +96,20 @@ const BrandText = styled(Typography)(({ theme }) => ({
 }));
 
 const Hero = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(10, 0, 4)
+  padding: theme.spacing(10, 0, 4),
+  position: "relative",
+  zIndex: 1
 }));
 
 const HeroGrid = styled(Box)(({ theme }) => ({
   display: "grid",
-  gap: theme.spacing(4),
+  gap: theme.spacing(3),
   gridTemplateColumns: "1fr",
   alignItems: "center",
   justifyItems: "center",
-  [theme.breakpoints.up("lg")]: {
-    gridTemplateColumns: "1.05fr 0.95fr",
-    alignItems: "center",
-    justifyItems: "stretch"
-  }
+  position: "relative",
+  zIndex: 1,
+  pointerEvents: "auto"
 }));
 
 const HeroTitle = styled(Typography)(() => ({
@@ -165,7 +165,150 @@ const HeroCard = styled(Card)(({ theme }) => ({
   padding: theme.spacing(3),
   backgroundColor: alpha(theme.palette.background.paper, 0.96),
   boxShadow: "none",
-  border: "none"
+  border: "none",
+  position: "relative",
+  zIndex: 1,
+  pointerEvents: "auto"
+}));
+
+const HeroPanel = styled(Box)(({ theme }) => ({
+  width: "100%",
+  maxWidth: 620,
+  borderRadius: 24,
+  padding: theme.spacing(3.5),
+  backgroundColor: alpha(theme.palette.background.paper, 0.9),
+  border: `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
+  boxShadow: "0 24px 50px rgba(15, 23, 42, 0.08)"
+}));
+
+const StepList = styled(Stack)(({ theme }) => ({
+  gap: theme.spacing(2),
+  marginTop: theme.spacing(2)
+}));
+
+const StepItem = styled(Box)(({ theme }) => ({
+  display: "grid",
+  gridTemplateColumns: "32px 1fr",
+  gap: theme.spacing(1.5),
+  alignItems: "center",
+  padding: theme.spacing(1.5),
+  borderRadius: 16,
+  backgroundColor: alpha(theme.palette.primary.main, 0.06),
+  border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`
+}));
+
+const StepIndex = styled(Box)(({ theme }) => ({
+  width: 32,
+  height: 32,
+  borderRadius: 10,
+  display: "grid",
+  placeItems: "center",
+  fontWeight: 700,
+  color: theme.palette.primary.main,
+  backgroundColor: alpha(theme.palette.primary.main, 0.15)
+}));
+
+const LimitBadge = styled(Box)(({ theme }) => ({
+  marginTop: theme.spacing(2),
+  padding: theme.spacing(1.2, 1.6),
+  borderRadius: 14,
+  backgroundColor: alpha(theme.palette.secondary.main, 0.12),
+  color: theme.palette.text.primary,
+  fontWeight: 600
+}));
+
+const PdfCard = styled(Box)(({ theme }) => ({
+  width: "100%",
+  borderRadius: 16,
+  padding: theme.spacing(1.8),
+  backgroundColor: alpha(theme.palette.primary.main, 0.08),
+  border: `1px dashed ${alpha(theme.palette.primary.main, 0.35)}`,
+  display: "grid",
+  gap: theme.spacing(1)
+}));
+
+const HighlightBand = styled(Box)(({ theme }) => ({
+  width: "100%",
+  marginTop: theme.spacing(3),
+  borderRadius: 28,
+  padding: theme.spacing(3),
+  background: `linear-gradient(180deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, rgba(255,255,255,0.85) 100%)`,
+  border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`
+}));
+
+const HighlightGrid = styled(Box)(({ theme }) => ({
+  display: "grid",
+  gap: theme.spacing(2),
+  gridTemplateColumns: "1fr",
+  [theme.breakpoints.up("md")]: {
+    gridTemplateColumns: "repeat(3, 1fr)"
+  }
+}));
+
+const HighlightCard = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(2.5),
+  borderRadius: 18,
+  backgroundColor: "rgba(255,255,255,0.92)",
+  border: `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
+  boxShadow: "0 12px 24px rgba(15, 23, 42, 0.08)"
+}));
+
+const TestimonialTrack = styled(Box)(({ theme }) => ({
+  position: "relative",
+  width: "100%",
+  overflow: "hidden",
+  padding: theme.spacing(1, 0)
+}));
+
+const TestimonialRow = styled(Box)(({ theme }) => ({
+  display: "flex",
+  gap: theme.spacing(3),
+  width: "max-content",
+  animation: "testimonialScroll 35s linear infinite",
+  "@keyframes testimonialScroll": {
+    "0%": { transform: "translateX(0)" },
+    "100%": { transform: "translateX(-50%)" }
+  },
+  "&:hover": {
+    animationPlayState: "paused"
+  }
+}));
+
+const TestimonialCard = styled(Box)(({ theme }) => ({
+  minWidth: 360,
+  maxWidth: 420,
+  padding: theme.spacing(3),
+  borderRadius: 24,
+  backgroundColor: alpha(theme.palette.background.paper, 0.95),
+  border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
+  boxShadow: "0 20px 45px rgba(15, 23, 42, 0.1)",
+  display: "grid",
+  gap: theme.spacing(2)
+}));
+
+const TestimonialHeader = styled(Box)(({ theme }) => ({
+  display: "flex",
+  alignItems: "center",
+  gap: theme.spacing(2)
+}));
+
+const AvatarCircle = styled(Box)(({ theme }) => ({
+  width: 56,
+  height: 56,
+  borderRadius: "50%",
+  display: "grid",
+  placeItems: "center",
+  fontWeight: 700,
+  color: theme.palette.primary.main,
+  background: alpha(theme.palette.primary.main, 0.12),
+  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`
+}));
+
+const RatingRow = styled(Box)(({ theme }) => ({
+  display: "flex",
+  alignItems: "center",
+  gap: theme.spacing(0.5),
+  color: theme.palette.warning.main
 }));
 
 const WaveformCard = styled(Box)(({ theme }) => ({
@@ -188,45 +331,71 @@ const WaveformCard = styled(Box)(({ theme }) => ({
   placeItems: "center"
 }));
 
-const WaveGlow = styled(Box)(({ theme }) => ({
+const SpeakerPulse = styled(Box, {
+  shouldForwardProp: (prop) => prop !== "recording"
+})<{ recording: boolean }>(({ theme, recording }) => ({
+  position: "relative",
+  width: 120,
+  height: 120,
+  borderRadius: "50%",
+  display: "grid",
+  placeItems: "center",
+  background: alpha(theme.palette.primary.main, 0.12),
+  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+  "&::before, &::after": {
+    content: '""',
+    position: "absolute",
+    borderRadius: "50%",
+    border: `1px dashed ${alpha(theme.palette.primary.main, 0.35)}`,
+    opacity: recording ? 1 : 0,
+    animation: recording ? "speakerRipple 2s ease-out infinite" : "none"
+  },
+  "&::before": {
+    width: 150,
+    height: 150
+  },
+  "&::after": {
+    width: 190,
+    height: 190,
+    animationDelay: "0.6s"
+  },
+  "@keyframes speakerRipple": {
+    "0%": { transform: "scale(0.8)", opacity: 0.7 },
+    "100%": { transform: "scale(1.1)", opacity: 0 }
+  }
+}));
+
+const SpeakerDot = styled(Box)(({ theme }) => ({
+  width: 14,
+  height: 14,
+  borderRadius: "50%",
+  background: theme.palette.primary.main,
+  boxShadow: `0 0 0 6px ${alpha(theme.palette.primary.main, 0.2)}`,
   position: "absolute",
-  inset: -40,
-  background: `radial-gradient(closest-side, ${alpha(
-    theme.palette.primary.main,
-    0.18
-  )}, transparent 70%)`,
-  pointerEvents: "none"
+  bottom: 10
 }));
 
 const WaveRow = styled(Box, {
   shouldForwardProp: (prop) => prop !== "recording"
-})<{ recording: boolean }>(({ theme, recording }) => ({
+})<{ recording: boolean }>(({ recording }) => ({
   display: "flex",
-  gap: 6,
-  width: "85%",
-  height: 70,
+  gap: 4,
+  width: "90%",
+  height: 120,
   alignItems: "center",
   justifyContent: "center",
-  flexWrap: "nowrap",
-  filter: recording ? "drop-shadow(0 0 10px rgba(56, 189, 248, 0.35))" : "none"
+  opacity: recording ? 1 : 0.4
 }));
 
 const WaveBar = styled(Box, {
   shouldForwardProp: (prop) => prop !== "recording" && prop !== "delay"
-})<{ recording: boolean; delay: number }>(({ theme, recording, delay }) => ({
-  width: "100%",
+})<{ recording: boolean; delay: number }>(({ theme }) => ({
+  width: 4,
   borderRadius: 999,
-  background: `linear-gradient(180deg, ${alpha(
-    theme.palette.primary.main,
-    0.9
-  )}, ${alpha(theme.palette.secondary.main, 0.6)})`,
-  height: 10,
-  opacity: recording ? 1 : 0.35,
-  animation: recording ? `waveBounce 1.6s ${delay}ms ease-in-out infinite` : "none",
-  "@keyframes waveBounce": {
-    "0%, 100%": { height: 10 },
-    "50%": { height: 58 }
-  }
+  height: 12,
+  background: alpha(theme.palette.primary.main, 0.9),
+  transition: "height 90ms ease",
+  willChange: "height"
 }));
 
 const PrimaryButton = styled(Button)(({ theme }) => ({
@@ -256,7 +425,7 @@ const AppSection = styled(Box)(({ theme }) => ({
   borderRadius: 24,
   background: "linear-gradient(180deg, #151a22 0%, #0f141b 100%)",
   color: "#e5e7eb",
-  padding: theme.spacing(5, 4),
+  padding: theme.spacing(3.5, 4),
   display: "grid",
   gap: theme.spacing(4),
   alignItems: "center",
@@ -604,28 +773,28 @@ export default function LandingPage() {
   const [loading, setLoading] = React.useState(true);
   const [isRecording, setIsRecording] = React.useState(false);
   const [audioUrl, setAudioUrl] = React.useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = React.useState("");
+  const barCount = 58;
+  const [levels, setLevels] = React.useState<number[]>(
+    Array.from({ length: barCount }, () => 0)
+  );
+  const [confirmState, setConfirmState] = React.useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+  }>({
+    open: false,
+    title: "Confirm action",
+    description: "",
+    onConfirm: () => {}
+  });
   const mediaRecorderRef = React.useRef<MediaRecorder | null>(null);
   const chunksRef = React.useRef<Blob[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
-  const [menuAnchor, setMenuAnchor] = React.useState<null | HTMLElement>(null);
-  const [showHeaderBrand, setShowHeaderBrand] = React.useState(true);
-
-  const menuOpen = Boolean(menuAnchor);
-
-  React.useEffect(() => {
-    const element = heroRef.current;
-    if (!element) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setShowHeaderBrand(entry.intersectionRatio < 1);
-      },
-      { threshold: [1] }
-    );
-
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
+  const audioContextRef = React.useRef<AudioContext | null>(null);
+  const analyserRef = React.useRef<AnalyserNode | null>(null);
+  const animationRef = React.useRef<number | null>(null);
 
   React.useEffect(() => {
     const load = async () => {
@@ -642,32 +811,109 @@ export default function LandingPage() {
     load();
   }, []);
 
-  React.useEffect(() => {
-    if (typeof document !== "undefined") {
-      document.body.style.scrollbarGutter = "stable";
-      document.documentElement.style.scrollbarGutter = "stable";
-      document.documentElement.style.overflowY = "scroll";
-    }
-    return () => {
-      if (typeof document !== "undefined") {
-        document.body.style.scrollbarGutter = "";
-        document.documentElement.style.scrollbarGutter = "";
-        document.documentElement.style.overflowY = "";
-      }
-    };
-  }, []);
-
   const attemptsRemaining = Math.max(attemptsLimit - attemptsUsed, 0);
 
+  const openConfirm = (title: string, description: string, onConfirm: () => void) => {
+    setConfirmState({ open: true, title, description, onConfirm });
+  };
+
+  const handleConfirmClose = () => {
+    setConfirmState((prev) => ({ ...prev, open: false }));
+  };
+
+  const stopWaveform = React.useCallback(() => {
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(() => undefined);
+      audioContextRef.current = null;
+    }
+    analyserRef.current = null;
+    setLevels(Array.from({ length: barCount }, () => 0));
+  }, []);
+
+  const createDummyPdf = React.useCallback(() => {
+    const escapeText = (value: string) =>
+      value.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+
+    const lines = [
+      "ScanboScribe AI Summary (Demo)",
+      "Patient-Doctor conversation summary will appear here.",
+      "Key findings: cough, sore throat, low-grade fever.",
+      "Assessment: Viral upper respiratory infection.",
+      "Plan: Rest, hydration, follow-up in 3 days."
+    ];
+
+    const contentLines = lines
+      .map((line, index) => `${index === 0 ? "" : "0 -24 Td\n"}(${escapeText(line)}) Tj`)
+      .join("\n");
+
+    const encoder = new TextEncoder();
+    const byteLength = (text: string) => encoder.encode(text).length;
+    const content = `BT\n/F1 18 Tf\n72 720 Td\n${contentLines}\nET`;
+    const obj1 = "1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj";
+    const obj2 = "2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj";
+    const obj3 =
+      "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >> endobj";
+    const obj4 = `4 0 obj << /Length ${byteLength(content)} >> stream\n${content}\nendstream\nendobj`;
+    const obj5 =
+      "5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj";
+
+    const objects = [obj1, obj2, obj3, obj4, obj5];
+
+    let pdf = "%PDF-1.4\n";
+    const offsets: number[] = [0];
+    objects.forEach((obj) => {
+      offsets.push(byteLength(pdf));
+      pdf += `${obj}\n`;
+    });
+
+    const xrefPosition = byteLength(pdf);
+    pdf += `xref\n0 ${objects.length + 1}\n`;
+    pdf += "0000000000 65535 f \n";
+    for (let i = 1; i < offsets.length; i += 1) {
+      pdf += `${String(offsets[i]).padStart(10, "0")} 00000 n \n`;
+    }
+    pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefPosition}\n%%EOF`;
+
+    return new Blob([pdf], { type: "application/pdf" });
+  }, []);
+
   const handleStartRecording = async () => {
+    setStatusMessage("Requesting microphone access...");
     if (isRecording) {
-      mediaRecorderRef.current?.stop();
+      openConfirm(
+        "Stop recording?",
+        "Stop recording and generate the summary PDF?",
+        () => {
+          mediaRecorderRef.current?.stop();
+          setStatusMessage("Recording stopped. Generating summary...");
+          stopWaveform();
+        }
+      );
       return;
     }
 
     if (attemptsRemaining <= 0) {
       setLimitError("Limit reached. Please log in to continue.");
       setShowLimitError(true);
+      setStatusMessage("");
+      return;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setLimitError("Recording is not supported in this browser.");
+      setShowLimitError(true);
+      setStatusMessage("");
+      return;
+    }
+
+    if (typeof window !== "undefined" && !window.isSecureContext) {
+      setLimitError("Microphone access requires HTTPS or localhost.");
+      setShowLimitError(true);
+      setStatusMessage("");
       return;
     }
 
@@ -678,6 +924,33 @@ export default function LandingPage() {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const audioContext = new AudioContext();
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+      audioContextRef.current = audioContext;
+      analyserRef.current = analyser;
+
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      const smoothing = 0.75;
+      let smoothedLevels = Array.from({ length: barCount }, () => 0);
+      const updateWave = () => {
+        if (!analyserRef.current) return;
+        analyserRef.current.getByteTimeDomainData(dataArray);
+        const nextLevels = Array.from({ length: barCount }, (_, index) => {
+          const sampleIndex = Math.floor((index / barCount) * dataArray.length);
+          const value = Math.abs(dataArray[sampleIndex] - 128) / 128;
+          return Math.min(1, value * 2.5);
+        });
+        smoothedLevels = smoothedLevels.map(
+          (prev, index) => prev * smoothing + nextLevels[index] * (1 - smoothing)
+        );
+        setLevels(smoothedLevels);
+        animationRef.current = requestAnimationFrame(updateWave);
+      };
+      updateWave();
+
       const recorder = new MediaRecorder(stream);
       mediaRecorderRef.current = recorder;
 
@@ -691,8 +964,17 @@ export default function LandingPage() {
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
         const url = URL.createObjectURL(blob);
         setAudioUrl(url);
+        const pdfBlob = createDummyPdf();
         setIsRecording(false);
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        const anchor = document.createElement("a");
+        anchor.href = pdfUrl;
+        anchor.download = "scanboscribe-summary.pdf";
+        anchor.click();
+        setTimeout(() => URL.revokeObjectURL(pdfUrl), 5000);
+        setStatusMessage("Summary downloaded.");
         stream.getTracks().forEach((track) => track.stop());
+        stopWaveform();
 
         try {
           await apiPost("/guestAttempts", { createdAt: new Date().toISOString() });
@@ -706,8 +988,13 @@ export default function LandingPage() {
 
       recorder.start();
       setIsRecording(true);
+      setStatusMessage("Recording...");
     } catch (error) {
       console.error("Unable to access microphone", error);
+      setLimitError("Microphone access was denied. Please allow access and try again.");
+      setShowLimitError(true);
+      setStatusMessage("");
+      stopWaveform();
     }
   };
 
@@ -715,9 +1002,38 @@ export default function LandingPage() {
     if (attemptsRemaining <= 0) {
       setLimitError("Limit reached. Please log in to continue.");
       setShowLimitError(true);
+      setStatusMessage("");
       return;
     }
+    setLimitError("");
+    setShowLimitError(false);
+    setStatusMessage("");
     fileInputRef.current?.click();
+  };
+
+  const processUpload = async (file: File) => {
+    try {
+      setStatusMessage("Uploading audio...");
+      const url = URL.createObjectURL(file);
+      setAudioUrl(url);
+      const pdfBlob = createDummyPdf();
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      const anchor = document.createElement("a");
+      anchor.href = pdfUrl;
+      anchor.download = "scanboscribe-summary.pdf";
+      anchor.click();
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 5000);
+      await apiPost("/guestAttempts", { createdAt: new Date().toISOString() });
+      setAttemptsUsed((prev) => prev + 1);
+      setLimitError("");
+      setShowLimitError(false);
+      setStatusMessage("Upload complete. Summary downloaded.");
+    } catch (error) {
+      console.error("Failed to record attempt", error);
+      setLimitError("Upload failed. Please try again.");
+      setShowLimitError(true);
+      setStatusMessage("");
+    }
   };
 
   const handleUploadChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -727,25 +1043,27 @@ export default function LandingPage() {
     if (attemptsRemaining <= 0) {
       setLimitError("Limit reached. Please log in to continue.");
       setShowLimitError(true);
+      setStatusMessage("");
       return;
     }
 
+    openConfirm(
+      "Generate summary?",
+      "Do you want to generate the summary PDF for this audio file?",
+      () => processUpload(file)
+    );
+    event.target.value = "";
+  };
+
+  const handleResetAttempts = () => {
     try {
-      await apiPost("/guestAttempts", { createdAt: new Date().toISOString() });
-      setAttemptsUsed((prev) => prev + 1);
-      setLimitError("");
-      setShowLimitError(false);
+      localStorage.removeItem("scanboScribeData");
     } catch (error) {
-      console.error("Failed to record attempt", error);
+      console.error("Failed to reset attempts", error);
     }
-  };
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setMenuAnchor(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setMenuAnchor(null);
+    setAttemptsUsed(0);
+    setLimitError("");
+    setShowLimitError(false);
   };
 
   return (
@@ -754,16 +1072,7 @@ export default function LandingPage() {
         <TopBar>
           <TopBarInner>
             <BrandRow>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1.5,
-                  opacity: showHeaderBrand ? 1 : 0,
-                  visibility: showHeaderBrand ? "visible" : "hidden",
-                  transition: "opacity 200ms ease"
-                }}
-              >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                 <Logo src="/scanbo-logo.svg" alt="Scanbo logo" />
                 <Typography variant="h5" fontWeight={700} textAlign="center">
                   ScanboScribe AI
@@ -777,119 +1086,222 @@ export default function LandingPage() {
               <PrimaryButton variant="contained" href="/login-password">
                 Sign up
               </PrimaryButton>
-              <IconButton onClick={handleMenuOpen} aria-label="Open menu">
-                <MenuIcon />
-              </IconButton>
             </Stack>
           </TopBarInner>
         </TopBar>
 
-        <Menu
-          anchorEl={menuAnchor}
-          open={menuOpen}
-          onClose={handleMenuClose}
-          disableScrollLock
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-          transformOrigin={{ vertical: "top", horizontal: "right" }}
-        >
-          <MenuItem onClick={handleMenuClose}>Start New Consult</MenuItem>
-          <MenuItem onClick={handleMenuClose}>Upload Recording</MenuItem>
-          <MenuItem onClick={handleMenuClose}>Download the App</MenuItem>
-          <MenuItem onClick={handleMenuClose}>About Scanbo Scribe AI</MenuItem>
-          <MenuItem onClick={handleMenuClose}>Pricing</MenuItem>
-          <MenuItem onClick={handleMenuClose}>Support</MenuItem>
-        </Menu>
-
         <Container maxWidth={false} sx={{ maxWidth: 1280 }}>
-          <Hero>
+          <Hero id="recording">
             <HeroGrid>
-              <Stack spacing={2.5} alignItems={{ xs: "center", lg: "flex-start" }} textAlign={{ xs: "center", lg: "left" }} sx={{ mt: { lg: 1 } }}>
+              <Stack spacing={2} alignItems="center" textAlign="center" sx={{ pt: 2 }}>
                 {/* <Typography variant="overline" letterSpacing={2} color="primary" fontWeight={700}>
                   ScanboScribe AI
                 </Typography> */}
                 <HeroTitle variant="h3">
-                  Turn clinical conversations into structured notes in minutes
+                  {/* Record once. Get a structured summary in minutes. */}
+                  We write the notes while you see the patient.
                 </HeroTitle>
                 <HeroLead variant="body1" color="text.secondary">
-                  Say goodbye to manual note taking, errors and delays.
+                  Upload or record your patient‑doctor conversation. We generate a PDF summary with
+                  key findings, assessment, and plan.
                 </HeroLead>
-                <HeroLead variant="body1" color="text.secondary">
-                  With automatic note‑writing and AI‑driven pre‑authentication, simplify complexities
-                  and reduce errors to get faster claim approvals.
-                </HeroLead>
-                <BenefitRow>
-                  <BenefitPill>Automatic note‑writing</BenefitPill>
-                  <BenefitPill>AI pre‑auth</BenefitPill>
-                  <BenefitPill>Faster approvals</BenefitPill>
-                </BenefitRow>
-                <StatRow>
-                  <StatCard>
-                    <Typography variant="h6" fontWeight={700}>2 min</Typography>
-                    <Typography variant="caption" color="text.secondary">First draft</Typography>
-                  </StatCard>
-                  <StatCard>
-                    <Typography variant="h6" fontWeight={700}>35%</Typography>
-                    <Typography variant="caption" color="text.secondary">Less charting</Typography>
-                  </StatCard>
-                  <StatCard>
-                    <Typography variant="h6" fontWeight={700}>99%</Typography>
-                    <Typography variant="caption" color="text.secondary">Accuracy</Typography>
-                  </StatCard>
-                </StatRow>
               </Stack>
 
-              <HeroCard ref={heroRef} sx={{ width: "100%", maxWidth: 560, justifySelf: { lg: "end" } }}>
+              <HeroCard ref={heroRef} sx={{ width: "100%", maxWidth: 620 }}>
                 <Stack spacing={2} alignItems="center">
-                  <Stack direction="row" spacing={1.5} alignItems="center">
-                    <CardLogo src="/scanbo-logo.svg" alt="Scanbo logo" />
-                    <Typography variant="h4" fontWeight={700}>
-                      ScanboScribe AI
-                    </Typography>
-                  </Stack>
-
                   <WaveformCard>
-                    <WaveGlow />
-                    <WaveRow recording={isRecording}>
-                      {Array.from({ length: 20 }).map((_, index) => (
-                        <WaveBar key={`wave-${index}`} recording={isRecording} delay={index * 55} />
-                      ))}
-                    </WaveRow>
+                  {isRecording ? (
+                      <WaveRow recording={isRecording}>
+                      {Array.from({ length: barCount }).map((_, index) => {
+                        return (
+                          <WaveBar
+                            key={`wave-${index}`}
+                            recording={isRecording}
+                            delay={index * 25}
+                            style={{
+                              height: 10 + levels[index] * 90
+                            }}
+                          />
+                        );
+                      })}
+                      </WaveRow>
+                  ) : (
+                    <SpeakerPulse recording={isRecording}>
+                      <MicNoneOutlinedIcon color="primary" fontSize="large" />
+                      <SpeakerDot />
+                    </SpeakerPulse>
+                  )}
                   </WaveformCard>
 
                   <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
                     <PrimaryButton
                       variant="contained"
                       startIcon={<GraphicEqOutlinedIcon />}
-                      onClick={handleStartRecording}
-                      disabled={loading}
+                      onClick={() => {
+                        setStatusMessage("Start button clicked.");
+                        handleStartRecording();
+                      }}
                     >
                       {isRecording ? "Stop Recording" : "Start Recording"}
                     </PrimaryButton>
-                    <OutlineButton variant="outlined" startIcon={<CloudUploadOutlinedIcon />} onClick={handleUploadClick}>
-                      Upload Audio
-                    </OutlineButton>
+                    {!isRecording ? (
+                      <OutlineButton
+                        variant="outlined"
+                        startIcon={<CloudUploadOutlinedIcon />}
+                        onClick={() => {
+                          setStatusMessage("Upload button clicked.");
+                          handleUploadClick();
+                        }}
+                      >
+                        Upload Audio
+                      </OutlineButton>
+                    ) : null}
                   </Stack>
 
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="audio/*"
+                    style={{ display: "none" }}
+                    onChange={handleUploadChange}
+                  />
+
                   <Typography variant="caption" color="text.secondary">
-                    {attemptsRemaining} of {attemptsLimit} free recordings left
+                    {attemptsRemaining} of {attemptsLimit} free uploads for guests
                   </Typography>
-                  {attemptsRemaining <= 0 && showLimitError ? (
+                  {statusMessage ? (
+                    <Typography variant="caption" color="text.secondary">
+                      {statusMessage}
+                    </Typography>
+                  ) : null}
+                  {showLimitError ? (
                     <Typography variant="caption" color="error">
                       {limitError || "Limit reached. Please log in to continue."}
                     </Typography>
                   ) : null}
 
-                  {audioUrl ? (
-                    <Box sx={{ width: "100%" }}>
-                      <audio src={audioUrl} controls style={{ width: "100%" }} />
-                    </Box>
-                  ) : null}
                 </Stack>
               </HeroCard>
+
+              {/* <Stack spacing={2} sx={{ width: "100%", maxWidth: 980 }}> */}
+                {/* <Stack
+                  direction={{ xs: "column", md: "row" }}
+                  spacing={2}
+                  alignItems="stretch"
+                >
+                  <Box
+                    sx={{
+                      flex: 1,
+                      borderRadius: 3,
+                      padding: 2.5,
+                      backgroundColor: "rgba(255,255,255,0.85)",
+                      border: "1px solid rgba(15, 23, 42, 0.08)"
+                    }}
+                  >
+                    <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+                      What you get in the PDF
+                    </Typography>
+                    <Stack spacing={1}>
+                      <Typography variant="body2" color="text.secondary">
+                        • Encounter summary with key findings
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        • Assessment & plan in structured sections
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        • Ready‑to‑paste notes for your workflow
+                      </Typography>
+                    </Stack>
+                  </Box>
+                  <Box
+                    sx={{
+                      flex: 1,
+                      borderRadius: 3,
+                      padding: 2.5,
+                      backgroundColor: "rgba(255,255,255,0.85)",
+                      border: "1px solid rgba(15, 23, 42, 0.08)"
+                    }}
+                  >
+                    <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+                      Why clinicians use it
+                    </Typography>
+                    <Stack spacing={1}>
+                      <Typography variant="body2" color="text.secondary">
+                        • Reduce after‑hours charting
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        • Fewer missed details in documentation
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        • Faster review and sign‑off
+                      </Typography>
+                    </Stack>
+                  </Box>
+                </Stack>
+
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} justifyContent="center">
+                  <Chip label="HIPAA‑aligned workflows" variant="outlined" />
+                  <Chip label="Structured summaries" variant="outlined" />
+                  <Chip label="Clinical cue highlights" variant="outlined" />
+                </Stack> */}
+
+                {/* <LimitBadge>
+                  Guest access: {attemptsRemaining} of {attemptsLimit} recordings left.
+                </LimitBadge>
+                <Button variant="text" size="small" onClick={handleResetAttempts}>
+                  Reset limit (demo)
+                </Button> */}
+                {/* <LimitBadge>
+                  Guest access: {attemptsRemaining} of {attemptsLimit} recordings left.
+                </LimitBadge>
+                <Button variant="text" size="small" onClick={handleResetAttempts}>
+                  Reset limit (demo)
+                </Button> */}
+              {/* </Stack> */}
             </HeroGrid>
           </Hero>
 
-          <Section>
+          <HighlightBand>
+            <Stack spacing={1} alignItems="center" textAlign="center" sx={{ mb: 2 }}>
+              <Typography variant="overline" letterSpacing={2} color="primary" fontWeight={700}>
+                Built for clinicians
+              </Typography>
+              <Typography variant="h5" fontWeight={700}>
+                Turn conversations into compliant documentation
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Accurate summaries, faster approvals, and less after‑hours charting.
+              </Typography>
+            </Stack>
+            <HighlightGrid>
+              <HighlightCard>
+                <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+                  Structured summary
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Clear Assessment and Plan sections generated from the encounter.
+                </Typography>
+              </HighlightCard>
+              <HighlightCard>
+                <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+                  Clinical cue highlights
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Key vitals, meds, and timelines surfaced for quick review.
+                </Typography>
+              </HighlightCard>
+              <HighlightCard>
+                <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+                  Claim‑ready notes
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Reduce errors and delays with consistent, complete documentation.
+                </Typography>
+              </HighlightCard>
+            </HighlightGrid>
+          </HighlightBand>
+
+          <Section id="download-app">
             <AppSection>
               <Stack spacing={2}>
                 <Typography variant="h4" fontWeight={700}>
@@ -978,7 +1390,7 @@ export default function LandingPage() {
             </HowGrid>
           </Section>
 
-          <Section>
+          <Section id="pricing">
             <Stack spacing={2} alignItems="center">
               <SectionTitle variant="h4">Pricing plans</SectionTitle>
               <Typography variant="body2" color="text.secondary" textAlign="center">
@@ -1067,6 +1479,119 @@ export default function LandingPage() {
                   </PricingContent>
                 </PricingCard>
               </PricingGrid>
+            </Stack>
+          </Section>
+
+          <Section>
+            <Stack spacing={2} alignItems="center" textAlign="center">
+              <SectionTitle variant="h4">What clinicians say</SectionTitle>
+              <Typography variant="body2" color="text.secondary">
+                Real feedback from doctors using ScanboScribe AI in daily practice.
+              </Typography>
+              <TestimonialTrack>
+                <TestimonialRow>
+                  {[
+                    {
+                      initials: "DR",
+                      name: "Dr. Riya Menon",
+                      role: "Internal Medicine · Bengaluru",
+                      quote:
+                        "ScanboScribe AI cut my after‑hours charting in half. The summaries are clean and SOAP‑ready."
+                    },
+                    {
+                      initials: "AK",
+                      name: "Dr. Arjun Khanna",
+                      role: "Family Medicine · Pune",
+                      quote:
+                        "It captures the encounter accurately and organizes key findings with minimal edits."
+                    },
+                    {
+                      initials: "MS",
+                      name: "Dr. Meera Shah",
+                      role: "Cardiology · Mumbai",
+                      quote:
+                        "The structured notes and cue highlights save me time and reduce missed details."
+                    },
+                    {
+                      initials: "VK",
+                      name: "Dr. Vivek Kumar",
+                      role: "Pediatrics · Delhi",
+                      quote:
+                        "I can focus on patients while ScanboScribe handles documentation in the background."
+                    }
+                  ].map((item, index) => (
+                    <TestimonialCard key={`testimonial-${index}`}>
+                      <TestimonialHeader>
+                        <AvatarCircle>{item.initials}</AvatarCircle>
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight={700}>
+                            {item.name}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {item.role}
+                          </Typography>
+                          <RatingRow>
+                            {Array.from({ length: 5 }).map((_, starIndex) => (
+                              <StarRoundedIcon key={`star-${index}-${starIndex}`} fontSize="small" />
+                            ))}
+                          </RatingRow>
+                        </Box>
+                      </TestimonialHeader>
+                      <Typography variant="body1">“{item.quote}”</Typography>
+                    </TestimonialCard>
+                  ))}
+                  {[
+                    {
+                      initials: "DR",
+                      name: "Dr. Riya Menon",
+                      role: "Internal Medicine · Bengaluru",
+                      quote:
+                        "ScanboScribe AI cut my after‑hours charting in half. The summaries are clean and SOAP‑ready."
+                    },
+                    {
+                      initials: "AK",
+                      name: "Dr. Arjun Khanna",
+                      role: "Family Medicine · Pune",
+                      quote:
+                        "It captures the encounter accurately and organizes key findings with minimal edits."
+                    },
+                    {
+                      initials: "MS",
+                      name: "Dr. Meera Shah",
+                      role: "Cardiology · Mumbai",
+                      quote:
+                        "The structured notes and cue highlights save me time and reduce missed details."
+                    },
+                    {
+                      initials: "VK",
+                      name: "Dr. Vivek Kumar",
+                      role: "Pediatrics · Delhi",
+                      quote:
+                        "I can focus on patients while ScanboScribe handles documentation in the background."
+                    }
+                  ].map((item, index) => (
+                    <TestimonialCard key={`testimonial-dup-${index}`}>
+                      <TestimonialHeader>
+                        <AvatarCircle>{item.initials}</AvatarCircle>
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight={700}>
+                            {item.name}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {item.role}
+                          </Typography>
+                          <RatingRow>
+                            {Array.from({ length: 5 }).map((_, starIndex) => (
+                              <StarRoundedIcon key={`star-dup-${index}-${starIndex}`} fontSize="small" />
+                            ))}
+                          </RatingRow>
+                        </Box>
+                      </TestimonialHeader>
+                      <Typography variant="body1">“{item.quote}”</Typography>
+                    </TestimonialCard>
+                  ))}
+                </TestimonialRow>
+              </TestimonialTrack>
             </Stack>
           </Section>
 
@@ -1213,10 +1738,18 @@ export default function LandingPage() {
                     Product
                   </Typography>
                   <Stack spacing={1} sx={{ mt: 1 }}>
-                    <FooterLink variant="body2">How it works</FooterLink>
-                    <FooterLink variant="body2">Security</FooterLink>
-                    <FooterLink variant="body2">Integrations</FooterLink>
-                    <FooterLink variant="body2">Pricing</FooterLink>
+                    <FooterLink component={Link} href="/how-it-works" variant="body2">
+                      How it works
+                    </FooterLink>
+                    <FooterLink component={Link} href="/security" variant="body2">
+                      Security
+                    </FooterLink>
+                    <FooterLink component={Link} href="/integrations" variant="body2">
+                      Integrations
+                    </FooterLink>
+                    <FooterLink component={Link} href="/pricing" variant="body2">
+                      Pricing
+                    </FooterLink>
                   </Stack>
                 </Box>
 
@@ -1225,10 +1758,18 @@ export default function LandingPage() {
                     Company
                   </Typography>
                   <Stack spacing={1} sx={{ mt: 1 }}>
-                    <FooterLink variant="body2">About</FooterLink>
-                    <FooterLink variant="body2">Announcements</FooterLink>
-                    <FooterLink variant="body2">Careers</FooterLink>
-                    <FooterLink variant="body2">Contact</FooterLink>
+                    <FooterLink component={Link} href="/about" variant="body2">
+                      About
+                    </FooterLink>
+                    <FooterLink component={Link} href="/announcements" variant="body2">
+                      Announcements
+                    </FooterLink>
+                    <FooterLink component={Link} href="/careers" variant="body2">
+                      Careers
+                    </FooterLink>
+                    <FooterLink component={Link} href="/contact" variant="body2">
+                      Contact
+                    </FooterLink>
                   </Stack>
                 </Box>
 
@@ -1263,6 +1804,18 @@ export default function LandingPage() {
             </FooterInner>
           </Footer>
       </Background>
+      <ConfirmDialog
+        open={confirmState.open}
+        title={confirmState.title}
+        description={confirmState.description}
+        confirmLabel="Generate"
+        cancelLabel="Cancel"
+        onCancel={handleConfirmClose}
+        onConfirm={() => {
+          confirmState.onConfirm();
+          handleConfirmClose();
+        }}
+      />
     </PageRoot>
   );
 }

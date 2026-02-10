@@ -65,7 +65,7 @@ export default function ConfirmDialog({
   onCancel
 }: ConfirmDialogProps) {
   return (
-    <StyledDialog open={open} onClose={onCancel} maxWidth="xs" fullWidth>
+    <StyledDialog open={open} onClose={onCancel} maxWidth="xs" fullWidth disableScrollLock>
       <DialogTitle sx={{ paddingTop: 3, paddingBottom: 1 }}>
         <Stack direction="row" spacing={1.5} alignItems="center">
           <IconBadge>

@@ -12,7 +12,12 @@ const nunito = Nunito({
 export const metadata: Metadata = {
   title: "Scanbo Scribe AI",
   description:
-    "Effortlessly create comprehensive and accurate patient notes from your voice recordings"
+    "Effortlessly create comprehensive and accurate patient notes from your voice recordings",
+  icons: {
+    icon: "/scanbo-logo.svg",
+    shortcut: "/scanbo-logo.svg",
+    apple: "/apple.png"
+  }
 };
 
 export default function RootLayout({

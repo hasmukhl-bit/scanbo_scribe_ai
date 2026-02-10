@@ -14,6 +14,8 @@ body {
   overflow-x: hidden;
   background: #f6f7fb;
   color: #111827;
+  scrollbar-gutter: stable;
+  overflow-y: scroll;
 }
 
 main {
