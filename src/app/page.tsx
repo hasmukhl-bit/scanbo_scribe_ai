@@ -31,7 +31,7 @@ import XIcon from "@mui/icons-material/X";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import Link from "next/link";
-import { apiGet, apiPost } from "@/lib/api";
+import { guestAttemptService } from "@/lib/services";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
 const PageRoot = styled("main")(() => ({
@@ -800,7 +800,7 @@ export default function LandingPage() {
   React.useEffect(() => {
     const load = async () => {
       try {
-        const attempts = await apiGet<{ id: number }[]>("/guestAttempts");
+        const attempts = await guestAttemptService.list();
         setAttemptsUsed(attempts.length);
       } catch (error) {
         console.error("Failed to load attempts", error);
@@ -978,7 +978,7 @@ export default function LandingPage() {
         stopWaveform();
 
         try {
-          await apiPost("/guestAttempts", { createdAt: new Date().toISOString() });
+          await guestAttemptService.create();
           setAttemptsUsed((prev) => prev + 1);
           setLimitError("");
           setShowLimitError(false);
@@ -1024,7 +1024,7 @@ export default function LandingPage() {
       anchor.download = "scanboscribe-summary.pdf";
       anchor.click();
       setTimeout(() => URL.revokeObjectURL(pdfUrl), 5000);
-      await apiPost("/guestAttempts", { createdAt: new Date().toISOString() });
+      await guestAttemptService.create();
       setAttemptsUsed((prev) => prev + 1);
       setLimitError("");
       setShowLimitError(false);
@@ -1057,14 +1057,16 @@ export default function LandingPage() {
   };
 
   const handleResetAttempts = () => {
-    try {
-      localStorage.removeItem("scanboScribeData");
-    } catch (error) {
-      console.error("Failed to reset attempts", error);
-    }
-    setAttemptsUsed(0);
-    setLimitError("");
-    setShowLimitError(false);
+    void (async () => {
+      try {
+        await guestAttemptService.clear();
+        setAttemptsUsed(0);
+        setLimitError("");
+        setShowLimitError(false);
+      } catch (error) {
+        console.error("Failed to reset attempts", error);
+      }
+    })();
   };
 
   return (

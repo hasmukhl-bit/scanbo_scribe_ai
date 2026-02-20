@@ -20,6 +20,7 @@ import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { signIn, useSession } from "next-auth/react";
 
 const PageRoot = styled("main")({
   width: "100%"
@@ -249,21 +250,40 @@ const networkPattern =
 
 export default function LoginPasswordPage() {
   const router = useRouter();
+  const { status } = useSession();
   const [showPassword, setShowPassword] = React.useState(false);
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
+  const [authError, setAuthError] = React.useState("");
+
+  React.useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/my-recordings");
+    }
+  }, [router, status]);
 
   const handlePasswordLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setAuthError("");
     setSubmitting(true);
 
     try {
-      localStorage.setItem(
-        "scanbo-user",
-        JSON.stringify({ username: username || "demo.doctor" })
-      );
-      router.push("/my-recordings");
+      const callbackUrl =
+        new URLSearchParams(window.location.search).get("callbackUrl") || "/my-recordings";
+      const response = await signIn("credentials", {
+        username,
+        password,
+        redirect: false,
+        callbackUrl
+      });
+
+      if (!response?.ok) {
+        setAuthError("Invalid username or password.");
+        return;
+      }
+
+      router.push(response.url || callbackUrl);
     } finally {
       setSubmitting(false);
     }
@@ -431,13 +451,19 @@ export default function LoginPasswordPage() {
                     </Button>
                   </Stack>
 
+                  {authError ? (
+                    <Typography variant="body2" color="error">
+                      {authError}
+                    </Typography>
+                  ) : null}
+
                   <SignInButton
                     variant="contained"
                     size="large"
                     fullWidth
                     type="submit"
                     form="login-password-form"
-                    disabled={submitting}
+                    disabled={submitting || status === "loading"}
                   >
                     {submitting ? "Signing in..." : "Sign in"}
                   </SignInButton>

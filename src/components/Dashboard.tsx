@@ -6,6 +6,7 @@ import {
   Box,
   Button,
   Chip,
+  CircularProgress,
   Stack,
   TextField,
   Typography,
@@ -13,8 +14,8 @@ import {
   Checkbox
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import { apiGet, apiPost } from "@/lib/api";
 import type { Consultation, Patient } from "@/lib/types";
+import { consultationService, patientService } from "@/lib/services";
 import { useRouter } from "next/navigation";
 
 const Section = styled(Box)(({ theme }) => ({
@@ -114,6 +115,10 @@ export default function Dashboard({ mode }: DashboardProps) {
   const [patients, setPatients] = React.useState<Patient[]>([]);
   const [consultations, setConsultations] = React.useState<Consultation[]>([]);
   const [query, setQuery] = React.useState("");
+  const [loading, setLoading] = React.useState(true);
+  const [saving, setSaving] = React.useState(false);
+  const [pageError, setPageError] = React.useState("");
+  const [formError, setFormError] = React.useState("");
   const [selectedPatient, setSelectedPatient] = React.useState<Patient | null>(null);
   const [form, setForm] = React.useState({
     fullName: "",
@@ -127,13 +132,27 @@ export default function Dashboard({ mode }: DashboardProps) {
   });
 
   const loadData = React.useCallback(async () => {
-    const [patientsData, consultationsData] = await Promise.all([
-      apiGet<Patient[]>("/patients"),
-      apiGet<Consultation[]>("/consultations")
-    ]);
-    setPatients(patientsData);
-    setConsultations(consultationsData);
-  }, []);
+    setPageError("");
+    setLoading(true);
+
+    try {
+      const patientsData = await patientService.list();
+      setPatients(patientsData);
+
+      if (mode === "dashboard") {
+        const consultationsData = await consultationService.list();
+
+        setConsultations(consultationsData);
+      } else {
+        setConsultations([]);
+      }
+    } catch (error) {
+      console.error(error);
+      setPageError("Unable to load patient data. Please refresh and try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [mode]);
 
   React.useEffect(() => {
     loadData();
@@ -150,31 +169,44 @@ export default function Dashboard({ mode }: DashboardProps) {
   });
 
   const handleCreatePatient = async () => {
+    setFormError("");
+
     if (!form.fullName || !form.age || !form.gender || !form.phone || !form.consent) {
+      setFormError("Please fill required fields and confirm consent.");
       return;
     }
 
-    await apiPost<Patient>("/patients", {
-      fullName: form.fullName,
-      age: Number(form.age),
-      gender: form.gender,
-      phone: form.phone,
-      address: form.address,
-      aadhaar: form.aadhaar,
-      mrn: form.mrn
-    });
+    setSaving(true);
 
-    await loadData();
-    setForm({
-      fullName: "",
-      age: "",
-      gender: "",
-      phone: "",
-      address: "",
-      aadhaar: "",
-      mrn: "",
-      consent: false
-    });
+    try {
+      await patientService.create({
+        fullName: form.fullName,
+        age: Number(form.age),
+        gender: form.gender,
+        phone: form.phone,
+        address: form.address,
+        aadhaar: form.aadhaar,
+        mrn: form.mrn
+      });
+
+      await loadData();
+      setForm({
+        fullName: "",
+        age: "",
+        gender: "",
+        phone: "",
+        address: "",
+        aadhaar: "",
+        mrn: "",
+        consent: false
+      });
+    } catch (error: unknown) {
+      console.error(error);
+      const message = error instanceof Error ? error.message : "Unable to save patient. Please try again.";
+      setFormError(message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const showDashboard = mode === "dashboard";
@@ -183,6 +215,25 @@ export default function Dashboard({ mode }: DashboardProps) {
 
   return (
     <Stack spacing={3}>
+      {loading ? (
+        <Section>
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <CircularProgress size={18} />
+            <Typography variant="body2" color="text.secondary">
+              Loading patient data...
+            </Typography>
+          </Stack>
+        </Section>
+      ) : null}
+
+      {pageError ? (
+        <Section>
+          <Typography variant="body2" color="error">
+            {pageError}
+          </Typography>
+        </Section>
+      ) : null}
+
       {showDashboard ? (
         <Section>
           <Stack spacing={2}>
@@ -293,8 +344,13 @@ export default function Dashboard({ mode }: DashboardProps) {
                 label="Consent received"
               />
               <Button variant="contained" onClick={handleCreatePatient}>
-                Save patient
+                {saving ? "Saving..." : "Save patient"}
               </Button>
+              {formError ? (
+                <Typography variant="body2" color="error">
+                  {formError}
+                </Typography>
+              ) : null}
             </ModalForm>
           </Stack>
         </Section>
@@ -351,13 +407,18 @@ export default function Dashboard({ mode }: DashboardProps) {
               />
               <Stack direction="row" spacing={2} alignItems="center">
                 <Button variant="contained" onClick={handleCreatePatient}>
-                  Save patient
+                  {saving ? "Saving..." : "Save patient"}
                 </Button>
                 {selectedPatient ? (
                   <Chip label={`Selected: ${selectedPatient.fullName}`} />
                 ) : null}
                 <Button variant="outlined">Proceed to Recording</Button>
               </Stack>
+              {formError ? (
+                <Typography variant="body2" color="error">
+                  {formError}
+                </Typography>
+              ) : null}
             </ModalForm>
           </Stack>
         </Section>

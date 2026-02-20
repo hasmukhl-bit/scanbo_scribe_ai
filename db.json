@@ -68,9 +68,66 @@
     {
       "createdAt": "2026-02-09T12:02:00.666Z",
       "id": 3
+    },
+    {
+      "id": 4,
+      "createdAt": "2026-02-13T09:05:22.568Z"
+    },
+    {
+      "id": 5,
+      "createdAt": "2026-02-20T06:16:18.431Z"
     }
   ],
-  "recordings": [],
+  "recordings": [
+    {
+      "id": "hv",
+      "initials": "HV",
+      "name": "Harsh Virdya",
+      "dob": "Jan 27, 1995",
+      "age": 30,
+      "sex": "M",
+      "date": "Feb 6, 2026, 2:59 PM",
+      "duration": "10:08 mins",
+      "clinician": "BakshiMD, Rahul",
+      "summary": "Anna Anderson, a 30-year-old female, presented for follow-up of hypertension, diabetes, COPD, and a history of colon polyps. She reported occasional forgetfulness with her diuretic but denied symptoms of elevated blood pressure. Her blood pressure today was 142/78. She checks fasting blood sugar most days with recent readings between 150–205 mg/dL. She denied chest pain or shortness of breath. On exam, lungs were clear and heart sounds regular. Labs were ordered and a neurology referral was placed for colon polyps follow-up.",
+      "hpi": [
+        "Anna Anderson, a 30-year-old female, presented for a chronic condition follow-up focused on hypertension, diabetes, COPD, and history of colon polyps. She shared that she sometimes forgets to take her hydrochlorothiazide, particularly when anticipating errands that increase urinary urgency. She denied headaches or blurry vision, and her blood pressure today was measured at 152/86.",
+        "Regarding her diabetes, she checks fasting blood sugar most days with recent morning readings ranging from 150 to 205 mg/dL. She denied recent symptoms of low blood sugar and recalled her last hypoglycemic episode was last year. She keeps a list of hypoglycemia treatments available at home."
+      ]
+    },
+    {
+      "id": "rs",
+      "initials": "RS",
+      "name": "Riya Sharma",
+      "dob": "Mar 12, 1992",
+      "age": 33,
+      "sex": "F",
+      "date": "Feb 5, 2026, 11:12 AM",
+      "duration": "08:42 mins",
+      "clinician": "Dr. Patel",
+      "summary": "Riya Sharma returned for medication adjustment following hypertension review. She reported improved adherence to amlodipine and decreased dizziness. BP today 130/82 with no new symptoms. Plan includes continued monitoring and repeat labs next visit.",
+      "hpi": [
+        "Patient reports improved adherence with current regimen and fewer episodes of lightheadedness. No chest pain, palpitations, or shortness of breath.",
+        "Discussed diet changes and exercise consistency. Patient agreed to track home BP logs."
+      ]
+    },
+    {
+      "id": "am",
+      "initials": "AM",
+      "name": "Arjun Mehta",
+      "dob": "Aug 9, 1984",
+      "age": 41,
+      "sex": "M",
+      "date": "Feb 4, 2026, 4:45 PM",
+      "duration": "12:15 mins",
+      "clinician": "Dr. Singh",
+      "summary": "Arjun Mehta seen for diabetes follow-up. Reports stable fasting sugars with occasional post-prandial spikes. No hypoglycemic events. Plan includes dose timing adjustment and nutrition consult.",
+      "hpi": [
+        "Patient reports fasting sugars averaging 140–160 mg/dL with occasional post-meal elevations. Denies hypoglycemia.",
+        "Reviewed medication timing and emphasized balanced carbohydrate intake."
+      ]
+    }
+  ],
   "clinicalInsights": [
     {
       "id": 1,

@@ -27,6 +27,7 @@ import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
 import AddIcon from "@mui/icons-material/Add";
 import SupportAgentOutlinedIcon from "@mui/icons-material/SupportAgentOutlined";
 import Link from "next/link";
+import { signOut, useSession } from "next-auth/react";
 import { useSidebar } from "@/components/SidebarState";
 
 const PageRoot = styled("main")(() => ({
@@ -375,7 +376,9 @@ type AppShellProps = {
 
 export default function AppShell({ title, subtitle, children, active }: AppShellProps) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [signingOut, setSigningOut] = React.useState(false);
   const menuOpen = Boolean(anchorEl);
+  const { data: session } = useSession();
   const { open: sidebarOpen, toggle: toggleSidebar } = useSidebar();
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -385,6 +388,16 @@ export default function AppShell({ title, subtitle, children, active }: AppShell
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
+
+  const handleLogout = async () => {
+    setSigningOut(true);
+    handleMenuClose();
+    await signOut({ callbackUrl: "/login-password" });
+  };
+
+  const userName = session?.user?.name || "User";
+  const userInitial = userName.slice(0, 1).toUpperCase();
+  const userSubLabel = session?.user?.email || "Signed in";
 
   return (
     <PageRoot>
@@ -560,9 +573,14 @@ export default function AppShell({ title, subtitle, children, active }: AppShell
                 />
                 <UserButton onClick={handleMenuOpen}>
                   <UserAvatar>
-                    <PersonOutlineOutlinedIcon fontSize="small" />
+                    <BoldText variant="caption">{userInitial}</BoldText>
                   </UserAvatar>
-                  <BoldText variant="body2">Hasmukh Lohar</BoldText>
+                  <Stack spacing={0}>
+                    <BoldText variant="body2">{userName}</BoldText>
+                    <Typography variant="caption" color="text.secondary">
+                      {userSubLabel}
+                    </Typography>
+                  </Stack>
                   <ExpandMoreIcon fontSize="small" />
                 </UserButton>
                 <Menu
@@ -572,7 +590,9 @@ export default function AppShell({ title, subtitle, children, active }: AppShell
                   anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
                   transformOrigin={{ vertical: "top", horizontal: "right" }}
                 >
-                  <MenuItem onClick={handleMenuClose}>Logout</MenuItem>
+                  <MenuItem onClick={handleLogout} disabled={signingOut}>
+                    {signingOut ? "Signing out..." : "Sign out"}
+                  </MenuItem>
                 </Menu>
               </HeaderRight>
             </HeaderToolbar>

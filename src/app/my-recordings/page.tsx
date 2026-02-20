@@ -7,6 +7,7 @@ import {
   Button,
   Checkbox,
   Chip,
+  CircularProgress,
   Divider,
   IconButton,
   InputAdornment,
@@ -26,6 +27,8 @@ import Forward10RoundedIcon from "@mui/icons-material/Forward10Rounded";
 import VolumeUpOutlinedIcon from "@mui/icons-material/VolumeUpOutlined";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import AppShell from "@/components/AppShell";
+import { recordingService } from "@/lib/services";
+import type { Recording } from "@/lib/types";
 import { useRouter } from "next/navigation";
 
 const PageGrid = styled(Box)(({ theme }) => ({
@@ -339,118 +342,15 @@ const ParagraphText = styled(Typography)({
   lineHeight: 1.6
 });
 
-const SectionLabel = styled(Typography)({
-  fontWeight: 600
-});
-
-type Recording = {
-  id: string;
-  initials: string;
-  name: string;
-  dob: string;
-  age: number;
-  sex: "M" | "F";
-  date: string;
-  duration: string;
-  clinician: string;
-  summary: string;
-  hpi: string[];
-};
-
 export default function HomePage() {
   const router = useRouter();
-  const initialRecordings: Recording[] = [
-    {
-      id: "hv",
-      initials: "HV",
-      name: "Harsh Virdya",
-      dob: "Jan 27, 1995",
-      age: 30,
-      sex: "M",
-      date: "Feb 6, 2026, 2:59 PM",
-      duration: "10:08 mins",
-      clinician: "BakshiMD, Rahul",
-      summary:
-        "Anna Anderson, a 30-year-old female, presented for follow-up of hypertension, diabetes, COPD, and a history of colon polyps. She reported occasional forgetfulness with her diuretic but denied symptoms of elevated blood pressure. Her blood pressure today was 142/78. She checks fasting blood sugar most days with recent readings between 150–205 mg/dL. She denied chest pain or shortness of breath. On exam, lungs were clear and heart sounds regular. Labs were ordered and a neurology referral was placed for colon polyps follow-up.",
-      hpi: [
-        "Anna Anderson, a 30-year-old female, presented for a chronic condition follow-up focused on hypertension, diabetes, COPD, and history of colon polyps. She shared that she sometimes forgets to take her hydrochlorothiazide, particularly when anticipating errands that increase urinary urgency. She denied headaches or blurry vision, and her blood pressure today was measured at 152/86.",
-        "Regarding her diabetes, she checks fasting blood sugar most days with recent morning readings ranging from 150 to 205 mg/dL. She denied recent symptoms of low blood sugar and recalled her last hypoglycemic episode was last year. She keeps a list of hypoglycemia treatments available at home."
-      ]
-    },
-    {
-      id: "rs",
-      initials: "RS",
-      name: "Riya Sharma",
-      dob: "Mar 12, 1992",
-      age: 33,
-      sex: "F",
-      date: "Feb 5, 2026, 11:12 AM",
-      duration: "08:42 mins",
-      clinician: "Dr. Patel",
-      summary:
-        "Riya Sharma returned for medication adjustment following hypertension review. She reported improved adherence to amlodipine and decreased dizziness. BP today 130/82 with no new symptoms. Plan includes continued monitoring and repeat labs next visit.",
-      hpi: [
-        "Patient reports improved adherence with current regimen and fewer episodes of lightheadedness. No chest pain, palpitations, or shortness of breath.",
-        "Discussed diet changes and exercise consistency. Patient agreed to track home BP logs."
-      ]
-    },
-    {
-      id: "am",
-      initials: "AM",
-      name: "Arjun Mehta",
-      dob: "Aug 9, 1984",
-      age: 41,
-      sex: "M",
-      date: "Feb 4, 2026, 4:45 PM",
-      duration: "12:15 mins",
-      clinician: "Dr. Singh",
-      summary:
-        "Arjun Mehta seen for diabetes follow-up. Reports stable fasting sugars with occasional post-prandial spikes. No hypoglycemic events. Plan includes dose timing adjustment and nutrition consult.",
-      hpi: [
-        "Patient reports fasting sugars averaging 140–160 mg/dL with occasional post-meal elevations. Denies hypoglycemia.",
-        "Reviewed medication timing and emphasized balanced carbohydrate intake."
-      ]
-    },
-    {
-      id: "nk",
-      initials: "NK",
-      name: "Neha Kapoor",
-      dob: "Nov 18, 1990",
-      age: 35,
-      sex: "F",
-      date: "Feb 3, 2026, 9:05 AM",
-      duration: "07:55 mins",
-      clinician: "Dr. Iyer",
-      summary:
-        "Neha Kapoor visited for COPD management. Reports stable symptoms with morning cough only. Lungs clear. Continue current inhaler and follow up in three months.",
-      hpi: [
-        "Patient reports stable breathing, occasional morning cough, no recent exacerbations.",
-        "Medication adherence confirmed; no side effects."
-      ]
-    },
-    {
-      id: "mg",
-      initials: "MG",
-      name: "Mehul Gupta",
-      dob: "May 4, 1981",
-      age: 44,
-      sex: "M",
-      date: "Feb 2, 2026, 6:28 PM",
-      duration: "09:18 mins",
-      clinician: "Dr. Rao",
-      summary:
-        "Mehul Gupta follow-up for chronic back pain. Pain improved with physiotherapy. Continue exercises and consider imaging if pain worsens.",
-      hpi: [
-        "Patient reports reduced pain intensity with regular physiotherapy.",
-        "Discussed red flags and when to return for imaging."
-      ]
-    }
-  ];
-
-  const [recordings, setRecordings] = React.useState<Recording[]>(initialRecordings);
-  const [activeId, setActiveId] = React.useState<string>(initialRecordings[0]?.id ?? "");
+  const [recordings, setRecordings] = React.useState<Recording[]>([]);
+  const [activeId, setActiveId] = React.useState<string>("");
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [pageError, setPageError] = React.useState("");
+  const [mutating, setMutating] = React.useState(false);
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [currentTime, setCurrentTime] = React.useState(0);
   const [duration, setDuration] = React.useState(0);
@@ -458,6 +358,35 @@ export default function HomePage() {
   const [isMuted, setIsMuted] = React.useState(false);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const audioSrc = "/Harsh%20%26%20Kashyap%20Conversation.m4a";
+
+  const loadRecordings = React.useCallback(async () => {
+    setPageError("");
+    setLoading(true);
+
+    try {
+      const items = await recordingService.list();
+      setRecordings(items);
+      setActiveId((prev) => {
+        if (prev && items.some((item) => item.id === prev)) {
+          return prev;
+        }
+        return items[0]?.id ?? "";
+      });
+    } catch (error) {
+      console.error(error);
+      setPageError("Unable to load recordings. Please refresh and try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    void loadRecordings();
+  }, [loadRecordings]);
+
+  React.useEffect(() => {
+    setSelectedIds((prev) => prev.filter((id) => recordings.some((item) => item.id === id)));
+  }, [recordings]);
 
   const filteredRecordings = React.useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -476,15 +405,27 @@ export default function HomePage() {
     );
   };
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelected = async () => {
     if (selectedIds.length === 0) {
       return;
     }
-    setRecordings((prev) => prev.filter((recording) => !selectedIds.includes(recording.id)));
-    setSelectedIds([]);
-    if (selectedIds.includes(activeId)) {
-      const remaining = recordings.filter((recording) => !selectedIds.includes(recording.id));
-      setActiveId(remaining[0]?.id ?? "");
+
+    setMutating(true);
+    setPageError("");
+
+    try {
+      await recordingService.removeMany(selectedIds);
+      setRecordings((prev) => prev.filter((recording) => !selectedIds.includes(recording.id)));
+      setSelectedIds([]);
+      if (selectedIds.includes(activeId)) {
+        const remaining = recordings.filter((recording) => !selectedIds.includes(recording.id));
+        setActiveId(remaining[0]?.id ?? "");
+      }
+    } catch (error) {
+      console.error(error);
+      setPageError("Unable to delete recordings. Please try again.");
+    } finally {
+      setMutating(false);
     }
   };
 
@@ -618,7 +559,7 @@ export default function HomePage() {
               </SelectAllWrap>
               {selectedIds.length > 0 ? (
                 <DeleteWrap>
-                  <DeleteButton size="small" onClick={handleDeleteSelected}>
+                  <DeleteButton size="small" onClick={() => void handleDeleteSelected()} disabled={mutating}>
                     <DeleteOutlineIcon fontSize="small" />
                   </DeleteButton>
                 </DeleteWrap>
@@ -638,45 +579,64 @@ export default function HomePage() {
             }
           />
 
-          <RecordingList>
-            {filteredRecordings.map((recording) => (
-              <RecordingItem
-                key={recording.id}
-                active={recording.id === activeId}
-                role="button"
-                tabIndex={0}
-                onClick={() => setActiveId(recording.id)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    setActiveId(recording.id);
-                  }
-                }}
-              >
-                <RecordingItemCard active={recording.id === activeId}>
-                  <ListCheckbox
-                    checked={selectedIds.includes(recording.id)}
-                    onClick={(event) => event.stopPropagation()}
-                    onChange={() => toggleSelected(recording.id)}
-                    inputProps={{ "aria-label": `Select ${recording.name}` }}
-                  />
-                  <RecordingAvatar>{recording.initials}</RecordingAvatar>
-                  <RecordingMeta>
-                    <RecordingName variant="body2">{recording.name}</RecordingName>
-                    <RecordingTime variant="caption" color="text.secondary">
-                      {recording.date}
-                    </RecordingTime>
-                  </RecordingMeta>
-                  <IconButton size="small">
-                    <MoreHorizIcon fontSize="small" />
-                  </IconButton>
-                </RecordingItemCard>
-              </RecordingItem>
-            ))}
-          </RecordingList>
+          {loading ? (
+            <Stack direction="row" spacing={1} alignItems="center">
+              <CircularProgress size={16} />
+              <Typography variant="caption" color="text.secondary">
+                Loading recordings...
+              </Typography>
+            </Stack>
+          ) : (
+            <RecordingList>
+              {filteredRecordings.map((recording) => (
+                <RecordingItem
+                  key={recording.id}
+                  active={recording.id === activeId}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setActiveId(recording.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setActiveId(recording.id);
+                    }
+                  }}
+                >
+                  <RecordingItemCard active={recording.id === activeId}>
+                    <ListCheckbox
+                      checked={selectedIds.includes(recording.id)}
+                      onClick={(event) => event.stopPropagation()}
+                      onChange={() => toggleSelected(recording.id)}
+                      inputProps={{ "aria-label": `Select ${recording.name}` }}
+                    />
+                    <RecordingAvatar>{recording.initials}</RecordingAvatar>
+                    <RecordingMeta>
+                      <RecordingName variant="body2">{recording.name}</RecordingName>
+                      <RecordingTime variant="caption" color="text.secondary">
+                        {recording.date}
+                      </RecordingTime>
+                    </RecordingMeta>
+                    <IconButton size="small">
+                      <MoreHorizIcon fontSize="small" />
+                    </IconButton>
+                  </RecordingItemCard>
+                </RecordingItem>
+              ))}
+              {filteredRecordings.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  No recordings found.
+                </Typography>
+              ) : null}
+            </RecordingList>
+          )}
         </ListPanel>
 
         <MainPanel>
+          {pageError ? (
+            <Typography variant="body2" color="error">
+              {pageError}
+            </Typography>
+          ) : null}
           <DetailHeader>
             <TitleRow>
               <TitleName variant="h6">
