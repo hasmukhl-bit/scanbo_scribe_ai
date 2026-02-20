@@ -18,9 +18,6 @@ import {
 } from "@mui/material";
 import { alpha, styled } from "@mui/material/styles";
 import MicNoneOutlinedIcon from "@mui/icons-material/MicNoneOutlined";
-import GraphicEqOutlinedIcon from "@mui/icons-material/GraphicEqOutlined";
-import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
-import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import GppGoodOutlinedIcon from "@mui/icons-material/GppGoodOutlined";
@@ -40,16 +37,13 @@ const PageRoot = styled("main")(() => ({
 
 const Background = styled(Box)(({ theme }) => ({
   minHeight: "100vh",
-  background: `radial-gradient(1200px 600px at 15% -10%, ${alpha(
-    theme.palette.primary.main,
+  background: `radial-gradient(900px 520px at 14% 6%, ${alpha(
+    "#58b8ff",
     0.18
-  )}, transparent 60%), radial-gradient(1000px 500px at 90% 10%, ${alpha(
-    theme.palette.secondary.main,
-    0.18
-  )}, transparent 60%), linear-gradient(180deg, ${theme.palette.background.default} 0%, ${alpha(
-    theme.palette.primary.light,
-    0.06
-  )} 100%)`,
+  )} 0%, transparent 72%), radial-gradient(860px 540px at 84% 22%, ${alpha(
+    "#a5dcff",
+    0.26
+  )} 0%, transparent 72%), linear-gradient(180deg, #f6f9fc 0%, #eaf3f9 60%, #f3f9fd 100%)`,
   paddingBottom: 0
 }));
 
@@ -58,28 +52,71 @@ const TopBar = styled(Box)(({ theme }) => ({
   top: 0,
   left: 0,
   right: 0,
-  zIndex: 10,
-  backdropFilter: "blur(8px)",
-  backgroundColor: alpha(theme.palette.background.default, 0.9),
-  borderBottom: `1px solid ${alpha(theme.palette.text.primary, 0.08)}`
+  zIndex: 20,
+  padding: theme.spacing(2, 2.5, 0),
+  boxSizing: "border-box"
 }));
 
 const TopBarInner = styled(Box)(({ theme }) => ({
+  maxWidth: 1400,
+  margin: "0 auto",
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  padding: theme.spacing(1.5, 3)
+  gap: theme.spacing(3),
+  padding: theme.spacing(1.8, 2.8),
+  borderRadius: 20,
+  backgroundColor: alpha("#ffffff", 0.95),
+  boxShadow: "0 12px 40px rgba(31, 85, 132, 0.12)",
+  border: `1px solid ${alpha("#86abd1", 0.18)}`
 }));
 
 const BrandRow = styled(Box)(({ theme }) => ({
   display: "flex",
   alignItems: "center",
-  gap: theme.spacing(1.5)
+  gap: theme.spacing(1.2)
+}));
+
+const NavLinks = styled(Stack)(({ theme }) => ({
+  display: "none",
+  alignItems: "center",
+  gap: theme.spacing(3.5),
+  [theme.breakpoints.up("md")]: {
+    display: "flex",
+    flexDirection: "row"
+  }
+}));
+
+const NavAnchor = styled("a", {
+  shouldForwardProp: (prop) => prop !== "active"
+})<{ active?: boolean }>(({ active }) => ({
+  color: active ? "#1172BA" : "#1f2937",
+  textDecoration: "none",
+  fontSize: "0.98rem",
+  fontWeight: active ? 700 : 500,
+  position: "relative",
+  transition: "color 0.2s ease",
+  "&::after": {
+    content: '""',
+    position: "absolute",
+    left: 0,
+    bottom: -6,
+    width: active ? "100%" : 0,
+    height: 2,
+    backgroundColor: "#1172BA",
+    transition: "width 0.2s ease"
+  },
+  "&:hover": {
+    color: "#1172BA"
+  },
+  "&:hover::after": {
+    width: "100%"
+  }
 }));
 
 const Logo = styled("img")(() => ({
-  width: 55,
-  height: 55
+  width: 42,
+  height: 42
 }));
 
 const CardLogo = styled("img")(() => ({
@@ -96,76 +133,83 @@ const BrandText = styled(Typography)(({ theme }) => ({
 }));
 
 const Hero = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(10, 0, 4),
+  padding: theme.spacing(15, 0, 4),
   position: "relative",
-  zIndex: 1
+  zIndex: 1,
+  [theme.breakpoints.down("sm")]: {
+    paddingTop: theme.spacing(13)
+  }
 }));
 
 const HeroGrid = styled(Box)(({ theme }) => ({
   display: "grid",
-  gap: theme.spacing(3),
+  gap: theme.spacing(4),
   gridTemplateColumns: "1fr",
   alignItems: "center",
-  justifyItems: "center",
+  justifyItems: "stretch",
   position: "relative",
   zIndex: 1,
-  pointerEvents: "auto"
+  pointerEvents: "auto",
+  [theme.breakpoints.up("lg")]: {
+    gridTemplateColumns: "1fr 1fr",
+    gap: theme.spacing(6)
+  }
 }));
 
 const HeroTitle = styled(Typography)(() => ({
+  fontFamily: "'Playfair Display', 'Times New Roman', serif",
   fontWeight: 700,
-  letterSpacing: -0.3,
-  maxWidth: 720,
-  margin: "0 auto"
+  letterSpacing: -1.1,
+  lineHeight: 1.03,
+  fontSize: "clamp(2.55rem, 5.3vw, 5rem)",
+  color: "#0f2238",
+  maxWidth: 640
 }));
 
 const HeroLead = styled(Typography)(() => ({
-  maxWidth: 720,
-  margin: "0 auto"
+  maxWidth: 640,
+  color: "#5f6f82",
+  lineHeight: 1.55
 }));
 
 const BenefitRow = styled(Stack)(({ theme }) => ({
   flexDirection: "row",
   gap: theme.spacing(1.5),
   flexWrap: "wrap",
-  justifyContent: "center"
+  justifyContent: "flex-start"
 }));
 
 const BenefitPill = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(0.8, 1.6),
+  padding: theme.spacing(0.85, 1.9),
   borderRadius: 999,
-  backgroundColor: alpha(theme.palette.primary.main, 0.08),
-  color: theme.palette.primary.main,
-  fontWeight: 600,
-  fontSize: "0.85rem"
+  backgroundColor: alpha("#f9f7de", 0.95),
+  color: "#1e6cc4",
+  border: `1px solid ${alpha("#d0c56e", 0.55)}`,
+  fontWeight: 700,
+  fontSize: "0.95rem"
 }));
 
 const StatRow = styled(Box)(({ theme }) => ({
   display: "grid",
-  gap: theme.spacing(2),
+  gap: theme.spacing(3),
   gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
   width: "100%",
-  maxWidth: 520,
-  margin: "0 auto",
+  maxWidth: 620,
   [theme.breakpoints.up("sm")]: {
     gridTemplateColumns: "repeat(3, minmax(0, 1fr))"
   }
 }));
 
 const StatCard = styled(Box)(({ theme }) => ({
-  borderRadius: 14,
-  padding: theme.spacing(1.5),
-  textAlign: "center",
-  backgroundColor: alpha(theme.palette.background.paper, 0.85),
-  border: `1px solid ${alpha(theme.palette.text.primary, 0.08)}`
+  textAlign: "left"
 }));
 
 const HeroCard = styled(Card)(({ theme }) => ({
-  borderRadius: 20,
-  padding: theme.spacing(3),
-  backgroundColor: alpha(theme.palette.background.paper, 0.96),
-  boxShadow: "none",
-  border: "none",
+  borderRadius: 28,
+  padding: theme.spacing(4),
+  background: `linear-gradient(120deg, ${alpha("#ffffff", 0.7)} 0%, ${alpha("#d9edfa", 0.82)} 100%)`,
+  boxShadow: "0 26px 64px rgba(36, 93, 141, 0.16)",
+  border: `1px solid ${alpha("#90b8dd", 0.26)}`,
   position: "relative",
   zIndex: 1,
   pointerEvents: "auto"
@@ -230,6 +274,7 @@ const PdfCard = styled(Box)(({ theme }) => ({
 const HighlightBand = styled(Box)(({ theme }) => ({
   width: "100%",
   marginTop: theme.spacing(3),
+  scrollMarginTop: theme.spacing(16),
   borderRadius: 28,
   padding: theme.spacing(3),
   background: `linear-gradient(180deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, rgba(255,255,255,0.85) 100%)`,
@@ -313,51 +358,38 @@ const RatingRow = styled(Box)(({ theme }) => ({
 
 const WaveformCard = styled(Box)(({ theme }) => ({
   width: "100%",
-  height: 180,
+  minHeight: 230,
   borderRadius: 20,
   margin: "16px auto",
   position: "relative",
   overflow: "hidden",
-  background: `linear-gradient(135deg, ${alpha(
-    theme.palette.primary.main,
-    0.12
-  )}, ${alpha(theme.palette.secondary.main, 0.1)} 60%, ${alpha(
-    theme.palette.background.paper,
-    0.9
-  )})`,
+  background: "linear-gradient(135deg, #e3f2fd 0%, #f0f8ff 100%)",
   border: "none",
   boxShadow: "none",
   display: "grid",
-  placeItems: "center"
+  placeItems: "center",
+  padding: theme.spacing(2)
 }));
 
 const SpeakerPulse = styled(Box, {
   shouldForwardProp: (prop) => prop !== "recording"
 })<{ recording: boolean }>(({ theme, recording }) => ({
   position: "relative",
-  width: 120,
-  height: 120,
+  width: 140,
+  height: 140,
   borderRadius: "50%",
   display: "grid",
   placeItems: "center",
-  background: alpha(theme.palette.primary.main, 0.12),
-  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-  "&::before, &::after": {
-    content: '""',
-    position: "absolute",
-    borderRadius: "50%",
-    border: `1px dashed ${alpha(theme.palette.primary.main, 0.35)}`,
-    opacity: recording ? 1 : 0,
-    animation: recording ? "speakerRipple 2s ease-out infinite" : "none"
-  },
-  "&::before": {
-    width: 150,
-    height: 150
-  },
-  "&::after": {
-    width: 190,
-    height: 190,
-    animationDelay: "0.6s"
+  background: "linear-gradient(135deg, rgba(95, 189, 235, 0.2) 0%, rgba(14, 85, 117, 0.15) 100%)",
+  border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+  animation: recording ? "none" : "heroMicPulse 2s ease-in-out infinite",
+  "@keyframes heroMicPulse": {
+    "0%, 100%": {
+      boxShadow: `0 0 0 0 ${alpha("#5fbdeb", 0.4)}`
+    },
+    "50%": {
+      boxShadow: `0 0 0 20px ${alpha("#5fbdeb", 0)}`
+    }
   },
   "@keyframes speakerRipple": {
     "0%": { transform: "scale(0.8)", opacity: 0.7 },
@@ -365,14 +397,28 @@ const SpeakerPulse = styled(Box, {
   }
 }));
 
+const MicGlyph = styled(Box)(() => ({
+  fontSize: 56,
+  lineHeight: 1,
+  color: "#1172BA",
+  userSelect: "none",
+  fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif'
+}));
+
 const SpeakerDot = styled(Box)(({ theme }) => ({
-  width: 14,
-  height: 14,
+  width: 12,
+  height: 12,
   borderRadius: "50%",
   background: theme.palette.primary.main,
-  boxShadow: `0 0 0 6px ${alpha(theme.palette.primary.main, 0.2)}`,
   position: "absolute",
-  bottom: 10
+  bottom: 25,
+  left: "50%",
+  transform: "translateX(-50%)",
+  animation: "heroMicBlink 1.5s ease-in-out infinite",
+  "@keyframes heroMicBlink": {
+    "0%, 100%": { opacity: 1 },
+    "50%": { opacity: 0.3 }
+  }
 }));
 
 const WaveRow = styled(Box, {
@@ -400,20 +446,86 @@ const WaveBar = styled(Box, {
 
 const PrimaryButton = styled(Button)(({ theme }) => ({
   textTransform: "none",
-  fontWeight: 600,
+  fontWeight: 700,
   borderRadius: 12,
-  padding: theme.spacing(1.2, 3)
+  padding: theme.spacing(1.35, 3.2),
+  minWidth: 190,
+  boxShadow: "0 12px 26px rgba(32, 112, 186, 0.26)",
+  transition:
+    "background-color 260ms ease, box-shadow 260ms ease, filter 260ms ease",
+  "&:hover": {
+    boxShadow: "0 14px 30px rgba(32, 112, 186, 0.3)",
+    filter: "brightness(0.96)"
+  },
+  "&:active": {
+    filter: "brightness(0.92)"
+  }
 }));
 
 const OutlineButton = styled(Button)(({ theme }) => ({
   textTransform: "none",
-  fontWeight: 600,
+  fontWeight: 700,
   borderRadius: 12,
-  padding: theme.spacing(1.1, 2.5)
+  padding: theme.spacing(1.2, 3),
+  minWidth: 180,
+  transition:
+    "background-color 260ms ease, box-shadow 260ms ease, border-color 260ms ease",
+  "&:hover": {
+    backgroundColor: alpha("#ffffff", 0.98),
+    boxShadow: "0 10px 24px rgba(35, 92, 145, 0.16)"
+  },
+  "&:active": {
+    backgroundColor: alpha("#ffffff", 0.9)
+  }
+}));
+
+const RecordingButton = styled(Button)(({ theme }) => ({
+  textTransform: "none",
+  fontWeight: 600,
+  fontSize: "1rem",
+  borderRadius: 12,
+  padding: theme.spacing(1.25, 3),
+  minWidth: 215,
+  height: 56,
+  boxSizing: "border-box",
+  transition: "all 0.3s ease",
+  boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
+  transform: "none",
+  "&:hover": {
+    transform: "none"
+  },
+  "&:active": {
+    transform: "none"
+  },
+  "&:focus-visible": {
+    transform: "none"
+  }
+}));
+
+const RecordingPrimaryButton = styled(RecordingButton)(() => ({
+  backgroundColor: "#1873bc",
+  color: "#ffffff",
+  "&:hover": {
+    backgroundColor: "#0f64a9",
+    transform: "none",
+    boxShadow: "0 6px 20px rgba(14, 85, 117, 0.3)"
+  }
+}));
+
+const RecordingSecondaryButton = styled(RecordingButton)(() => ({
+  backgroundColor: "#ffffff",
+  color: "#1172BA",
+  border: "2px solid rgba(14, 85, 117, 0.2)",
+  "&:hover": {
+    borderColor: "#1172BA",
+    transform: "none",
+    backgroundColor: "#ffffff"
+  }
 }));
 
 const Section = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(6, 0, 0)
+  padding: theme.spacing(6, 0, 0),
+  scrollMarginTop: theme.spacing(16)
 }));
 
 const SectionTitle = styled(Typography)(() => ({
@@ -696,7 +808,7 @@ const FooterInner = styled(Box)(({ theme }) => ({
   width: "100%",
   margin: "0 auto",
   padding: theme.spacing(5, 3, 4),
-  maxWidth: 1280
+  maxWidth: 1400
 }));
 
 const FooterTop = styled(Box)(({ theme }) => ({
@@ -764,7 +876,7 @@ const FAQDetails = styled(AccordionDetails)(({ theme }) => ({
   padding: theme.spacing(0, 2, 2)
 }));
 
-const attemptsLimit = 10;
+const attemptsLimit = 3;
 
 export default function LandingPage() {
   const heroRef = React.useRef<HTMLDivElement | null>(null);
@@ -775,6 +887,7 @@ export default function LandingPage() {
   const [isRecording, setIsRecording] = React.useState(false);
   const [audioUrl, setAudioUrl] = React.useState<string | null>(null);
   const [statusMessage, setStatusMessage] = React.useState("");
+  const [activeNav, setActiveNav] = React.useState("#features");
   const barCount = 58;
   const [levels, setLevels] = React.useState<number[]>(
     Array.from({ length: barCount }, () => 0)
@@ -1067,202 +1180,289 @@ export default function LandingPage() {
     setShowLimitError(false);
   };
 
+  const handleNavLinkClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    const targetId = event.currentTarget.getAttribute("href");
+    if (!targetId || !targetId.startsWith("#")) return;
+
+    const target = document.querySelector(targetId);
+    if (!target) return;
+
+    event.preventDefault();
+    setActiveNav(targetId);
+    target.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  };
+
   return (
     <PageRoot>
       <Background>
         <TopBar>
           <TopBarInner>
             <BrandRow>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Logo src="/scanbo-logo.svg" alt="Scanbo logo" />
-                <Typography variant="h5" fontWeight={700} textAlign="center">
-                  ScanboScribe AI
-                </Typography>
-              </Box>
+              <Logo src="/scanbo-logo.svg" alt="Scanbo logo" />
+              <Typography
+                variant="h5"
+                sx={{
+                  fontFamily: "'Playfair Display', 'Times New Roman', serif",
+                  fontWeight: 700,
+                  color: "#1f70ba",
+                  fontSize: { xs: "1.2rem", sm: "2rem" }
+                }}
+              >
+                Scanbo Scribe AI
+              </Typography>
             </BrandRow>
+            <NavLinks>
+              <NavAnchor href="#features" active={activeNav === "#features"} onClick={handleNavLinkClick}>
+                Features
+              </NavAnchor>
+              <NavAnchor
+                href="#how-it-works"
+                active={activeNav === "#how-it-works"}
+                onClick={handleNavLinkClick}
+              >
+                How It Works
+              </NavAnchor>
+              <NavAnchor
+                href="#testimonials"
+                active={activeNav === "#testimonials"}
+                onClick={handleNavLinkClick}
+              >
+                Testimonials
+              </NavAnchor>
+              <NavAnchor href="#faq" active={activeNav === "#faq"} onClick={handleNavLinkClick}>
+                FAQ
+              </NavAnchor>
+              <NavAnchor href="#pricing" active={activeNav === "#pricing"} onClick={handleNavLinkClick}>
+                Pricing
+              </NavAnchor>
+            </NavLinks>
             <Stack direction="row" spacing={1.5} alignItems="center">
-              <OutlineButton variant="outlined" href="/login-password">
+              <OutlineButton
+                variant="outlined"
+                href="/login"
+                sx={{ minWidth: { xs: 112, sm: 124 } }}
+              >
                 Login
               </OutlineButton>
-              <PrimaryButton variant="contained" href="/login-password">
-                Sign up
+              <PrimaryButton
+                variant="contained"
+                href="/signup"
+                sx={{
+                  minWidth: { xs: 168, sm: 186 },
+                  backgroundColor: "#1873bc",
+                  "&:hover": {
+                    backgroundColor: "#0f64a9"
+                  }
+                }}
+              >
+                SignUp - It&apos;s Free
               </PrimaryButton>
             </Stack>
           </TopBarInner>
         </TopBar>
 
-        <Container maxWidth={false} sx={{ maxWidth: 1280 }}>
+        <Container maxWidth={false} sx={{ maxWidth: 1400 }}>
           <Hero id="recording">
             <HeroGrid>
-              <Stack spacing={2} alignItems="center" textAlign="center" sx={{ pt: 2 }}>
-                {/* <Typography variant="overline" letterSpacing={2} color="primary" fontWeight={700}>
-                  ScanboScribe AI
-                </Typography> */}
-                <HeroTitle variant="h3">
-                  {/* Record once. Get a structured summary in minutes. */}
-                  We write the notes while you see the patient.
+              <Stack spacing={3} sx={{ pt: { xs: 1.5, md: 3 } }}>
+                <BenefitRow>
+                  <BenefitPill>✨ AI-Powered Medical Documentation</BenefitPill>
+                </BenefitRow>
+                <HeroTitle>
+                  More Time for{" "}
+                  <Box component="span" sx={{ color: "#2d8fd5" }}>
+                    Patients
+                  </Box>
+                  , Less Time on{" "}
+                  <Box component="span" sx={{ color: "#2d8fd5" }}>
+                    Paperwork
+                  </Box>
                 </HeroTitle>
-                <HeroLead variant="body1" color="text.secondary">
-                  Upload or record your patient‑doctor conversation. We generate a PDF summary with
-                  key findings, assessment, and plan.
+                <HeroLead variant="h6" fontWeight={400}>
+                  Scanbo Scribe AI transforms doctor-patient conversations into comprehensive
+                  medical notes instantly. Powered by advanced AI, we help clinicians save up to 3
+                  hours daily on documentation.
                 </HeroLead>
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={1.8}>
+                  <PrimaryButton
+                    variant="contained"
+                    href="/login"
+                    sx={{
+                      backgroundColor: "#1873bc",
+                      "&:hover": {
+                        backgroundColor: "#0f64a9"
+                      }
+                    }}
+                  >
+                    Get Started Free
+                  </PrimaryButton>
+                  <OutlineButton
+                    variant="outlined"
+                    href="#how-it-works"
+                    sx={{
+                      borderColor: "#1873bc",
+                      color: "#1873bc",
+                      backgroundColor: alpha("#ffffff", 0.9)
+                    }}
+                  >
+                    Watch Demo
+                  </OutlineButton>
+                </Stack>
+                <Divider sx={{ borderColor: alpha("#7ea2c7", 0.34), maxWidth: 620 }} />
+                <StatRow>
+                  <StatCard>
+                    <Typography variant="h3" sx={{ color: "#1873bc", fontWeight: 700 }}>
+                      3hrs
+                    </Typography>
+                    <Typography variant="h6" sx={{ color: "#5f6f82", fontWeight: 400 }}>
+                      Saved Daily
+                    </Typography>
+                  </StatCard>
+                  <StatCard>
+                    <Typography variant="h3" sx={{ color: "#1873bc", fontWeight: 700 }}>
+                      99%
+                    </Typography>
+                    <Typography variant="h6" sx={{ color: "#5f6f82", fontWeight: 400 }}>
+                      Accuracy
+                    </Typography>
+                  </StatCard>
+                  <StatCard>
+                    <Typography variant="h3" sx={{ color: "#1873bc", fontWeight: 700 }}>
+                      5k+
+                    </Typography>
+                    <Typography variant="h6" sx={{ color: "#5f6f82", fontWeight: 400 }}>
+                      Clinicians
+                    </Typography>
+                  </StatCard>
+                </StatRow>
               </Stack>
 
               <HeroCard ref={heroRef} sx={{ width: "100%", maxWidth: 620 }}>
-                <Stack spacing={2} alignItems="center">
-                  <WaveformCard>
-                  {isRecording ? (
-                      <WaveRow recording={isRecording}>
-                      {Array.from({ length: barCount }).map((_, index) => {
-                        return (
-                          <WaveBar
-                            key={`wave-${index}`}
-                            recording={isRecording}
-                            delay={index * 25}
-                            style={{
-                              height: 10 + levels[index] * 90
-                            }}
-                          />
-                        );
-                      })}
-                      </WaveRow>
-                  ) : (
-                    <SpeakerPulse recording={isRecording}>
-                      <MicNoneOutlinedIcon color="primary" fontSize="large" />
-                      <SpeakerDot />
-                    </SpeakerPulse>
-                  )}
-                  </WaveformCard>
-
-                  <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-                    <PrimaryButton
-                      variant="contained"
-                      startIcon={<GraphicEqOutlinedIcon />}
-                      onClick={() => {
-                        setStatusMessage("Start button clicked.");
-                        handleStartRecording();
-                      }}
+                <Stack sx={{ height: "100%" }} justifyContent="space-between" spacing={2.5}>
+                  <Stack spacing={1.4} alignItems="center">
+                    <Typography
+                      variant="h3"
+                      sx={{ fontWeight: 700, color: "#0f2238", textAlign: "center", mb: 0.8 }}
                     >
-                      {isRecording ? "Stop Recording" : "Start Recording"}
-                    </PrimaryButton>
-                    {!isRecording ? (
-                      <OutlineButton
-                        variant="outlined"
-                        startIcon={<CloudUploadOutlinedIcon />}
-                        onClick={() => {
-                          setStatusMessage("Upload button clicked.");
-                          handleUploadClick();
-                        }}
-                      >
-                        Upload Audio
-                      </OutlineButton>
-                    ) : null}
+                      We write the notes while you see the patient.
+                    </Typography>
+                    <Typography
+                      variant="h6"
+                      sx={{ color: "#5f6f82", textAlign: "center", fontWeight: 400 }}
+                    >
+                      Upload or record your patient-doctor conversation. We generate a PDF summary
+                      with key findings, assessment, and plan.
+                    </Typography>
                   </Stack>
 
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="audio/*"
-                    style={{ display: "none" }}
-                    onChange={handleUploadChange}
-                  />
+                  <Stack spacing={2.2} alignItems="center" sx={{ flex: 1, justifyContent: "center" }}>
+                    <WaveformCard>
+                      {isRecording ? (
+                        <WaveRow recording={isRecording}>
+                          {Array.from({ length: barCount }).map((_, index) => {
+                            return (
+                              <WaveBar
+                                key={`wave-${index}`}
+                                recording={isRecording}
+                                delay={index * 25}
+                                style={{
+                                  height: 10 + levels[index] * 90
+                                }}
+                              />
+                            );
+                          })}
+                        </WaveRow>
+                      ) : (
+                        <SpeakerPulse recording={isRecording}>
+                          <MicGlyph component="span" aria-hidden>
+                            🎙️
+                          </MicGlyph>
+                          <SpeakerDot />
+                        </SpeakerPulse>
+                      )}
+                    </WaveformCard>
+                  </Stack>
 
-                  <Typography variant="caption" color="text.secondary">
-                    {attemptsRemaining} of {attemptsLimit} free uploads for guests
-                  </Typography>
-                  {statusMessage ? (
-                    <Typography variant="caption" color="text.secondary">
-                      {statusMessage}
-                    </Typography>
-                  ) : null}
-                  {showLimitError ? (
-                    <Typography variant="caption" color="error">
-                      {limitError || "Limit reached. Please log in to continue."}
-                    </Typography>
-                  ) : null}
+                  <Stack spacing={1.5} alignItems="center">
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+                    <RecordingPrimaryButton
+                      variant="contained"
+                      href="/login"
+                      startIcon={
+                        <Box
+                          component="svg"
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M19 10V12C19 15.866 15.866 19 12 19M5 10V12C5 15.866 8.13401 19 12 19M12 19V23M8 23H16M12 15C10.3431 15 9 13.6569 9 12V5C9 3.34315 10.3431 2 12 2C13.6569 2 15 3.34315 15 5V12C15 13.6569 13.6569 15 12 15Z"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </Box>
+                      }
+                    >
+                      Start Recording
+                    </RecordingPrimaryButton>
+                    <RecordingSecondaryButton
+                      variant="outlined"
+                      href="/login"
+                      startIcon={
+                        <Box
+                          component="svg"
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path d="M7 18C7 18.5523 7.44772 19 8 19H16C16.5523 19 17 18.5523 17 18V10H7V18Z" stroke="currentColor" strokeWidth="2" />
+                          <path d="M17 6L17 6C17.9319 6.19904 18.7645 6.70487 19.3792 7.43259C19.9939 8.16031 20.3553 9.06612 20.4098 10.0099L21 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                          <path d="M7 6L7 6C6.06812 6.19904 5.23549 6.70487 4.62079 7.43259C4.00609 8.16031 3.64467 9.06612 3.59016 10.0099L3 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                          <path d="M12 3V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                        </Box>
+                      }
+                    >
+                      Upload Audio
+                    </RecordingSecondaryButton>
+                    </Stack>
 
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="audio/*"
+                      style={{ display: "none" }}
+                      onChange={handleUploadChange}
+                    />
+
+                    <Typography variant="subtitle1" sx={{ color: "#5f6f82", textAlign: "center" }}>
+                      Free trial includes 3 uploads • No credit card required
+                    </Typography>
+                    {statusMessage ? (
+                      <Typography variant="caption" color="text.secondary">
+                        {statusMessage}
+                      </Typography>
+                    ) : null}
+                    {showLimitError ? (
+                      <Typography variant="caption" color="error">
+                        {limitError || "Limit reached. Please log in to continue."}
+                      </Typography>
+                    ) : null}
+                  </Stack>
                 </Stack>
               </HeroCard>
-
-              {/* <Stack spacing={2} sx={{ width: "100%", maxWidth: 980 }}> */}
-                {/* <Stack
-                  direction={{ xs: "column", md: "row" }}
-                  spacing={2}
-                  alignItems="stretch"
-                >
-                  <Box
-                    sx={{
-                      flex: 1,
-                      borderRadius: 3,
-                      padding: 2.5,
-                      backgroundColor: "rgba(255,255,255,0.85)",
-                      border: "1px solid rgba(15, 23, 42, 0.08)"
-                    }}
-                  >
-                    <Typography variant="subtitle1" fontWeight={700} gutterBottom>
-                      What you get in the PDF
-                    </Typography>
-                    <Stack spacing={1}>
-                      <Typography variant="body2" color="text.secondary">
-                        • Encounter summary with key findings
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        • Assessment & plan in structured sections
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        • Ready‑to‑paste notes for your workflow
-                      </Typography>
-                    </Stack>
-                  </Box>
-                  <Box
-                    sx={{
-                      flex: 1,
-                      borderRadius: 3,
-                      padding: 2.5,
-                      backgroundColor: "rgba(255,255,255,0.85)",
-                      border: "1px solid rgba(15, 23, 42, 0.08)"
-                    }}
-                  >
-                    <Typography variant="subtitle1" fontWeight={700} gutterBottom>
-                      Why clinicians use it
-                    </Typography>
-                    <Stack spacing={1}>
-                      <Typography variant="body2" color="text.secondary">
-                        • Reduce after‑hours charting
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        • Fewer missed details in documentation
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        • Faster review and sign‑off
-                      </Typography>
-                    </Stack>
-                  </Box>
-                </Stack>
-
-                <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} justifyContent="center">
-                  <Chip label="HIPAA‑aligned workflows" variant="outlined" />
-                  <Chip label="Structured summaries" variant="outlined" />
-                  <Chip label="Clinical cue highlights" variant="outlined" />
-                </Stack> */}
-
-                {/* <LimitBadge>
-                  Guest access: {attemptsRemaining} of {attemptsLimit} recordings left.
-                </LimitBadge>
-                <Button variant="text" size="small" onClick={handleResetAttempts}>
-                  Reset limit (demo)
-                </Button> */}
-                {/* <LimitBadge>
-                  Guest access: {attemptsRemaining} of {attemptsLimit} recordings left.
-                </LimitBadge>
-                <Button variant="text" size="small" onClick={handleResetAttempts}>
-                  Reset limit (demo)
-                </Button> */}
-              {/* </Stack> */}
             </HeroGrid>
           </Hero>
 
-          <HighlightBand>
+          <HighlightBand id="features">
             <Stack spacing={1} alignItems="center" textAlign="center" sx={{ mb: 2 }}>
               <Typography variant="overline" letterSpacing={2} color="primary" fontWeight={700}>
                 Built for clinicians
@@ -1342,7 +1542,7 @@ export default function LandingPage() {
             </AppSection>
           </Section>
 
-          <Section>
+          <Section id="how-it-works">
             <HowGrid>
               <Stack spacing={2}>
                 <SectionTitle variant="h4">How it works</SectionTitle>
@@ -1483,7 +1683,7 @@ export default function LandingPage() {
             </Stack>
           </Section>
 
-          <Section>
+          <Section id="testimonials">
             <Stack spacing={2} alignItems="center" textAlign="center">
               <SectionTitle variant="h4">What clinicians say</SectionTitle>
               <Typography variant="body2" color="text.secondary">
@@ -1596,7 +1796,7 @@ export default function LandingPage() {
             </Stack>
           </Section>
 
-          <Section>
+          <Section id="faq">
             <Stack spacing={2} alignItems="center">
               <SectionTitle variant="h4">Security you can trust</SectionTitle>
               <Typography variant="body2" color="text.secondary" textAlign="center">

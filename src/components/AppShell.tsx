@@ -218,7 +218,11 @@ const MainColumn = styled(Box)(() => ({
 }));
 
 const HeaderBar = styled(AppBar)(({ theme }) => ({
-  borderBottom: `1px solid ${theme.palette.divider}`
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  top: 0,
+  zIndex: theme.zIndex.appBar,
+  backdropFilter: "blur(8px)",
+  backgroundColor: alpha(theme.palette.background.paper, 0.9)
 }));
 
 const HeaderToolbar = styled(Toolbar)(({ theme }) => ({
@@ -545,7 +549,7 @@ export default function AppShell({ title, subtitle, children, active }: AppShell
         </Sidebar>
 
         <MainColumn>
-          <HeaderBar position="static" color="inherit" elevation={0}>
+          <HeaderBar position="sticky" color="inherit" elevation={0}>
             <HeaderToolbar>
               <HeaderLeft>
                 <ToggleButton size="small" onClick={toggleSidebar}>

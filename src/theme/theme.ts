@@ -129,11 +129,13 @@ const theme = createTheme(baseTheme, {
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 10,
+          borderRadius: 8,
           textTransform: "none",
           fontWeight: 500,
           padding: baseTheme.spacing(1.25, 3),
           boxShadow: "none",
+          transition:
+            "box-shadow 180ms cubic-bezier(0.2, 0.8, 0.2, 1), background-color 180ms ease, border-color 180ms ease",
           "&:hover": {
             boxShadow: baseTheme.shadows[2]
           },

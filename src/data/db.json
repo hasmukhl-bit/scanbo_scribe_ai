@@ -6,6 +6,13 @@
       "password": "Scanbo@123",
       "name": "Demo Doctor",
       "role": "Physician"
+    },
+    {
+      "id": 2,
+      "username": "admin",
+      "password": "admin",
+      "name": "Admin",
+      "role": "Admin"
     }
   ],
   "patients": [

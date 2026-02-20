@@ -263,7 +263,7 @@ export default function LoginPasswordPage() {
         "scanbo-user",
         JSON.stringify({ username: username || "demo.doctor" })
       );
-      router.push("/my-recordings");
+      router.push("/start-consult");
     } finally {
       setSubmitting(false);
     }
