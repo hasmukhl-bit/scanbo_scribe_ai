@@ -127,12 +127,18 @@ const theme = createTheme(baseTheme, {
       }
     },
     MuiButton: {
+      defaultProps: {
+        size: "medium"
+      },
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 14,
           textTransform: "none",
-          fontWeight: 500,
-          padding: baseTheme.spacing(1.25, 3),
+          fontWeight: 700,
+          minHeight: 42,
+          padding: baseTheme.spacing(0, 3),
+          fontSize: "1rem",
+          lineHeight: 1,
           boxShadow: "none",
           transition:
             "box-shadow 180ms cubic-bezier(0.2, 0.8, 0.2, 1), background-color 180ms ease, border-color 180ms ease",
@@ -148,6 +154,18 @@ const theme = createTheme(baseTheme, {
           "&:hover": {
             boxShadow: baseTheme.shadows[4]
           }
+        },
+        sizeSmall: {
+          minHeight: 36,
+          padding: baseTheme.spacing(0, 2),
+          borderRadius: 12,
+          fontSize: "0.92rem"
+        },
+        sizeLarge: {
+          minHeight: 48,
+          padding: baseTheme.spacing(0, 3.5),
+          borderRadius: 16,
+          fontSize: "1.06rem"
         }
       }
     },

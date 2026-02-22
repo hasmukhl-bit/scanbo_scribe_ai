@@ -3,6 +3,7 @@
     {
       "id": 1,
       "username": "demo.doctor",
+      "email": "demo.doctor@scanbo.ai",
       "password": "Scanbo@123",
       "name": "Demo Doctor",
       "role": "Physician"

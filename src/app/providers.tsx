@@ -4,7 +4,7 @@ import { CssBaseline, ThemeProvider } from "@mui/material";
 import { SessionProvider } from "next-auth/react";
 import type { ReactNode } from "react";
 import theme from "@/theme/theme";
-import { SidebarProvider } from "@/components/SidebarState";
+import { SidebarProvider } from "@/components/layout/SidebarState";
 
 export default function Providers({ children }: { children: ReactNode }) {
   return (

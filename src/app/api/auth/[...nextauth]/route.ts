@@ -11,7 +11,7 @@ const authOptions: NextAuthOptions = {
     })
   ],
   pages: {
-    signIn: "/login-password"
+    signIn: "/login"
   },
   callbacks: {
     async signIn({ user }) {

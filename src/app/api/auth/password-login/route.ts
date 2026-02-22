@@ -5,7 +5,6 @@ const jsonServerUrl = process.env.JSON_SERVER_URL || "http://localhost:4000";
 
 type BackendUser = {
   id: number;
-  username?: string;
   email?: string;
   password?: string;
   name?: string;
@@ -15,13 +14,21 @@ type BackendUser = {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as { identifier?: string; password?: string };
-    const identifier = body.identifier?.trim();
+    const body = (await request.json()) as { email?: string; password?: string };
+    const email = body.email?.trim().toLowerCase();
     const password = body.password?.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!identifier || !password) {
+    if (!email || !password) {
       return NextResponse.json(
-        { ok: false, message: "Email/username and password are required." },
+        { ok: false, message: "Email and password are required." },
+        { status: 400 }
+      );
+    }
+
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { ok: false, message: "Enter a valid email address." },
         { status: 400 }
       );
     }
@@ -30,26 +37,18 @@ export async function POST(request: Request) {
     let user: BackendUser | undefined;
 
     try {
-      const query = encodeURIComponent(identifier);
-      const [byEmail, byUsername] = await Promise.all([
-        fetch(`${jsonServerUrl}/users?email=${query}`, { cache: "no-store" }).then((res) => res.json()),
-        fetch(`${jsonServerUrl}/users?username=${query}`, { cache: "no-store" }).then((res) => res.json())
-      ]);
-
+      const query = encodeURIComponent(email);
+      const byEmail = await fetch(`${jsonServerUrl}/users?email=${query}`, { cache: "no-store" }).then(
+        (res) => res.json()
+      );
       const emailMatches = Array.isArray(byEmail) ? (byEmail as BackendUser[]) : [];
-      const usernameMatches = Array.isArray(byUsername) ? (byUsername as BackendUser[]) : [];
-      user = emailMatches[0] ?? usernameMatches[0];
+      user = emailMatches[0];
     } catch {
       // Fallback to bundled users when JSON server is unavailable.
     }
 
     if (!user) {
-      const normalized = identifier.toLowerCase();
-      user = localUsers.find((candidate) => {
-        const byEmail = candidate.email?.toLowerCase() === normalized;
-        const byUsername = candidate.username?.toLowerCase() === normalized;
-        return byEmail || byUsername;
-      });
+      user = localUsers.find((candidate) => candidate.email?.toLowerCase() === email);
     }
 
     if (!user || user.password !== password) {
@@ -63,7 +62,7 @@ export async function POST(request: Request) {
       ok: true,
       user: {
         id: user.id,
-        username: user.username || user.email || "",
+        username: user.email || "",
         email: user.email || "",
         name: user.name || "",
         role: user.role || "Clinician",

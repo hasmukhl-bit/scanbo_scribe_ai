@@ -8,6 +8,7 @@ import {
   Chip,
   Container,
   Divider,
+  Drawer,
   IconButton,
   Accordion,
   AccordionSummary,
@@ -23,13 +24,15 @@ import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import GppGoodOutlinedIcon from "@mui/icons-material/GppGoodOutlined";
 import AddIcon from "@mui/icons-material/Add";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
+import MenuIcon from "@mui/icons-material/Menu";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import XIcon from "@mui/icons-material/X";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import Link from "next/link";
-import { apiGet, apiPost } from "@/lib/api";
-import ConfirmDialog from "@/components/ConfirmDialog";
+import { useRouter } from "next/navigation";
+import { apiGet, apiPost } from "@/lib/api-client";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
 
 const PageRoot = styled("main")(() => ({
   width: "100%"
@@ -53,22 +56,30 @@ const TopBar = styled(Box)(({ theme }) => ({
   left: 0,
   right: 0,
   zIndex: 20,
-  padding: theme.spacing(2, 2.5, 0),
-  boxSizing: "border-box"
+  padding: theme.spacing(1.25, 1.25, 0),
+  boxSizing: "border-box",
+  "@media (min-width: 768px)": {
+    padding: theme.spacing(2, 2.5, 0)
+  }
 }));
 
 const TopBarInner = styled(Box)(({ theme }) => ({
   maxWidth: 1400,
   margin: "0 auto",
   display: "flex",
+  flexDirection: "row",
   alignItems: "center",
   justifyContent: "space-between",
-  gap: theme.spacing(3),
-  padding: theme.spacing(1.8, 2.8),
+  gap: theme.spacing(1.2),
+  padding: theme.spacing(1.2, 1.2),
   borderRadius: 20,
   backgroundColor: alpha("#ffffff", 0.95),
   boxShadow: "0 12px 40px rgba(31, 85, 132, 0.12)",
-  border: `1px solid ${alpha("#86abd1", 0.18)}`
+  border: `1px solid ${alpha("#86abd1", 0.18)}`,
+  "@media (min-width: 768px)": {
+    gap: theme.spacing(3),
+    padding: theme.spacing(1.8, 2.8)
+  }
 }));
 
 const BrandRow = styled(Box)(({ theme }) => ({
@@ -81,9 +92,29 @@ const NavLinks = styled(Stack)(({ theme }) => ({
   display: "none",
   alignItems: "center",
   gap: theme.spacing(3.5),
-  [theme.breakpoints.up("md")]: {
+  "@media (min-width: 768px)": {
     display: "flex",
     flexDirection: "row"
+  }
+}));
+
+const TopActions = styled(Stack)(({ theme }) => ({
+  display: "none",
+  "@media (min-width: 768px)": {
+    width: "auto",
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing(1.5),
+    "& .MuiButton-root": {
+      width: "auto"
+    }
+  }
+}));
+
+const MobileMenuButton = styled(IconButton)(() => ({
+  "@media (min-width: 768px)": {
+    display: "none"
   }
 }));
 
@@ -133,11 +164,11 @@ const BrandText = styled(Typography)(({ theme }) => ({
 }));
 
 const Hero = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(15, 0, 4),
+  padding: theme.spacing(14, 0, 4),
   position: "relative",
   zIndex: 1,
-  [theme.breakpoints.down("sm")]: {
-    paddingTop: theme.spacing(13)
+  "@media (min-width: 768px)": {
+    paddingTop: theme.spacing(15)
   }
 }));
 
@@ -320,8 +351,8 @@ const TestimonialRow = styled(Box)(({ theme }) => ({
 }));
 
 const TestimonialCard = styled(Box)(({ theme }) => ({
-  minWidth: 360,
-  maxWidth: 420,
+  minWidth: "min(360px, calc(100vw - 52px))",
+  maxWidth: "min(420px, calc(100vw - 52px))",
   padding: theme.spacing(3),
   borderRadius: 24,
   backgroundColor: alpha(theme.palette.background.paper, 0.95),
@@ -879,6 +910,7 @@ const FAQDetails = styled(AccordionDetails)(({ theme }) => ({
 const attemptsLimit = 3;
 
 export default function LandingPage() {
+  const router = useRouter();
   const heroRef = React.useRef<HTMLDivElement | null>(null);
   const [attemptsUsed, setAttemptsUsed] = React.useState(0);
   const [limitError, setLimitError] = React.useState("");
@@ -888,6 +920,7 @@ export default function LandingPage() {
   const [audioUrl, setAudioUrl] = React.useState<string | null>(null);
   const [statusMessage, setStatusMessage] = React.useState("");
   const [activeNav, setActiveNav] = React.useState("#features");
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const barCount = 58;
   const [levels, setLevels] = React.useState<number[]>(
     Array.from({ length: barCount }, () => 0)
@@ -909,6 +942,14 @@ export default function LandingPage() {
   const audioContextRef = React.useRef<AudioContext | null>(null);
   const analyserRef = React.useRef<AnalyserNode | null>(null);
   const animationRef = React.useRef<number | null>(null);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const savedUser = window.localStorage.getItem("scanbo-user");
+    if (savedUser) {
+      router.replace("/dashboard");
+    }
+  }, [router]);
 
   React.useEffect(() => {
     const load = async () => {
@@ -1195,6 +1236,11 @@ export default function LandingPage() {
     });
   };
 
+  const handleMobileNavLinkClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    handleNavLinkClick(event);
+    setMobileMenuOpen(false);
+  };
+
   return (
     <PageRoot>
       <Background>
@@ -1208,7 +1254,7 @@ export default function LandingPage() {
                   fontFamily: "'Playfair Display', 'Times New Roman', serif",
                   fontWeight: 700,
                   color: "#1f70ba",
-                  fontSize: { xs: "1.2rem", sm: "2rem" }
+                  fontSize: { xs: "1rem", sm: "2rem" }
                 }}
               >
                 Scanbo Scribe AI
@@ -1239,10 +1285,19 @@ export default function LandingPage() {
                 Pricing
               </NavAnchor>
             </NavLinks>
-            <Stack direction="row" spacing={1.5} alignItems="center">
+            <MobileMenuButton
+              size="small"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Open navigation menu"
+            >
+              <MenuIcon fontSize="small" />
+            </MobileMenuButton>
+            <TopActions>
               <OutlineButton
                 variant="outlined"
                 href="/login"
+                target="_blank"
+                rel="noopener noreferrer"
                 sx={{ minWidth: { xs: 112, sm: 124 } }}
               >
                 Login
@@ -1250,6 +1305,8 @@ export default function LandingPage() {
               <PrimaryButton
                 variant="contained"
                 href="/signup"
+                target="_blank"
+                rel="noopener noreferrer"
                 sx={{
                   minWidth: { xs: 168, sm: 186 },
                   backgroundColor: "#1873bc",
@@ -1260,9 +1317,99 @@ export default function LandingPage() {
               >
                 SignUp - It&apos;s Free
               </PrimaryButton>
-            </Stack>
+            </TopActions>
           </TopBarInner>
         </TopBar>
+        <Drawer
+          anchor="right"
+          open={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
+          sx={{ "@media (min-width: 768px)": { display: "none" } }}
+        >
+          <Stack
+            spacing={1.5}
+            sx={{
+              width: "min(86vw, 320px)",
+              p: 2.5,
+              height: "100%",
+              display: "flex"
+            }}
+          >
+            <Typography variant="subtitle1" fontWeight={700}>
+              Menu
+            </Typography>
+            <Button
+              component="a"
+              href="#features"
+              variant="text"
+              sx={{ justifyContent: "flex-start" }}
+              onClick={handleMobileNavLinkClick}
+            >
+              Features
+            </Button>
+            <Button
+              component="a"
+              href="#how-it-works"
+              variant="text"
+              sx={{ justifyContent: "flex-start" }}
+              onClick={handleMobileNavLinkClick}
+            >
+              How It Works
+            </Button>
+            <Button
+              component="a"
+              href="#testimonials"
+              variant="text"
+              sx={{ justifyContent: "flex-start" }}
+              onClick={handleMobileNavLinkClick}
+            >
+              Testimonials
+            </Button>
+            <Button
+              component="a"
+              href="#faq"
+              variant="text"
+              sx={{ justifyContent: "flex-start" }}
+              onClick={handleMobileNavLinkClick}
+            >
+              FAQ
+            </Button>
+            <Button
+              component="a"
+              href="#pricing"
+              variant="text"
+              sx={{ justifyContent: "flex-start" }}
+              onClick={handleMobileNavLinkClick}
+            >
+              Pricing
+            </Button>
+            <Box sx={{ mt: "auto", display: "grid", gap: 1.5 }}>
+              <Divider />
+              <OutlineButton
+                variant="outlined"
+                href="/login"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Login
+              </OutlineButton>
+              <PrimaryButton
+                variant="contained"
+                href="/signup"
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{
+                  backgroundColor: "#1873bc",
+                  "&:hover": { backgroundColor: "#0f64a9" }
+                }}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                SignUp - It&apos;s Free
+              </PrimaryButton>
+            </Box>
+          </Stack>
+        </Drawer>
 
         <Container maxWidth={false} sx={{ maxWidth: 1400 }}>
           <Hero id="recording">
@@ -1290,6 +1437,8 @@ export default function LandingPage() {
                   <PrimaryButton
                     variant="contained"
                     href="/login"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     sx={{
                       backgroundColor: "#1873bc",
                       "&:hover": {
@@ -1410,7 +1559,7 @@ export default function LandingPage() {
                         </Box>
                       }
                     >
-                      Start Recording
+                      Capture Audio
                     </RecordingPrimaryButton>
                     <RecordingSecondaryButton
                       variant="outlined"
@@ -1965,7 +2114,7 @@ export default function LandingPage() {
                   <Typography variant="body2" sx={{ color: "#b8c2d0", mt: 1 }}>
                     Monthly updates on clinical features and templates.
                   </Typography>
-                  <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                  <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mt: 2 }}>
                     <TextField
                       size="small"
                       placeholder="Email"
