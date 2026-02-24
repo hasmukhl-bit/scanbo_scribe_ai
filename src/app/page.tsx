@@ -1296,8 +1296,6 @@ export default function LandingPage() {
               <OutlineButton
                 variant="outlined"
                 href="/login"
-                target="_blank"
-                rel="noopener noreferrer"
                 sx={{ minWidth: { xs: 112, sm: 124 } }}
               >
                 Login
@@ -1305,8 +1303,6 @@ export default function LandingPage() {
               <PrimaryButton
                 variant="contained"
                 href="/signup"
-                target="_blank"
-                rel="noopener noreferrer"
                 sx={{
                   minWidth: { xs: 168, sm: 186 },
                   backgroundColor: "#1873bc",
@@ -1388,8 +1384,6 @@ export default function LandingPage() {
               <OutlineButton
                 variant="outlined"
                 href="/login"
-                target="_blank"
-                rel="noopener noreferrer"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Login
@@ -1397,8 +1391,6 @@ export default function LandingPage() {
               <PrimaryButton
                 variant="contained"
                 href="/signup"
-                target="_blank"
-                rel="noopener noreferrer"
                 sx={{
                   backgroundColor: "#1873bc",
                   "&:hover": { backgroundColor: "#0f64a9" }
@@ -1437,8 +1429,6 @@ export default function LandingPage() {
                   <PrimaryButton
                     variant="contained"
                     href="/login"
-                    target="_blank"
-                    rel="noopener noreferrer"
                     sx={{
                       backgroundColor: "#1873bc",
                       "&:hover": {
