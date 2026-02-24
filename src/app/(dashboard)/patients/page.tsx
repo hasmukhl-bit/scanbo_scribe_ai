@@ -5,13 +5,13 @@ import styled from "@emotion/styled";
 import { alpha } from "@mui/material/styles";
 import {
   Box,
-  Button,
   Chip,
   InputAdornment,
   OutlinedInput,
   Stack,
   Typography
 } from "@mui/material";
+import AppButton from "@/components/ui/AppButton";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
@@ -155,20 +155,12 @@ export default function PatientsPage() {
               Patients
             </Typography>
             <Stack direction="row" spacing={1}>
-              <Button
-                variant="outlined"
-                startIcon={<FilterListRoundedIcon />}
-                sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700 }}
-              >
+              <AppButton intent="neutral" startIcon={<FilterListRoundedIcon />}>
                 Filter
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<AddRoundedIcon />}
-                sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700 }}
-              >
+              </AppButton>
+              <AppButton intent="primary" startIcon={<AddRoundedIcon />}>
                 New Patient
-              </Button>
+              </AppButton>
             </Stack>
           </Stack>
 
@@ -228,14 +220,13 @@ export default function PatientsPage() {
                 </Typography>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <Chip size="small" label={row.status} color={statusColor(row.status)} />
-                  <Button
-                    variant="outlined"
+                  <AppButton
+                    intent="secondary"
                     size="small"
                     onClick={() => router.push(`/consultation?patientId=${row.id}&mode=record`)}
-                    sx={{ textTransform: "none", borderRadius: 999, minWidth: 56 }}
                   >
                     View
-                  </Button>
+                  </AppButton>
                 </Stack>
               </BodyRow>
             ))}

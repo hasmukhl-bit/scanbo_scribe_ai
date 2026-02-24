@@ -23,6 +23,7 @@ import {
   Toolbar,
   Typography
 } from "@mui/material";
+import AppButton from "@/components/ui/AppButton";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import MicNoneOutlinedIcon from "@mui/icons-material/MicNoneOutlined";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
@@ -588,20 +589,9 @@ export default function AppShell({ title, subtitle, children, active }: AppShell
           {sidebarOpen ? (
             <SidebarContent spacing={2}>
               <SidebarActions>
-                <Button
-                  variant="contained"
-                  onClick={openStartConsultDialog}
-                  sx={{
-                    textTransform: "none",
-                    fontWeight: 600,
-                    borderRadius: 12,
-                    padding: (theme) => theme.spacing(1, 2),
-                    backgroundColor: "primary.main",
-                    "&:hover": { backgroundColor: "primary.dark" }
-                  }}
-                >
+                <AppButton intent="primary" onClick={openStartConsultDialog}>
                   + Start Consult
-                </Button>
+                </AppButton>
               </SidebarActions>
 
               <NavSection>
@@ -1221,61 +1211,53 @@ export default function AppShell({ title, subtitle, children, active }: AppShell
             <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: 1.25, gap: 1.2, justifyContent: "space-between" }}>
               {modalStep === "select" ? (
                 <>
-                  <Button
-                    color="inherit"
-                    onClick={closeStartConsultDialog}
-                    sx={{ textTransform: "none" }}
-                  >
+                  <AppButton intent="neutral" onClick={closeStartConsultDialog}>
                     Cancel
-                  </Button>
+                  </AppButton>
                   <Stack direction="row" spacing={1.5}>
-                    <Button
-                      variant="outlined"
+                    <AppButton
+                      intent="secondary"
                       startIcon={<AddIcon />}
                       onClick={() => setModalStep("create")}
-                      sx={{ textTransform: "none", borderRadius: 2.2, px: 2.4 }}
                     >
                       Create Patient
-                    </Button>
-                    <Button
-                      variant="contained"
+                    </AppButton>
+                    <AppButton
+                      intent="primary"
                       endIcon={<ArrowForwardRoundedIcon />}
                       onClick={handleContinueWithSelectedPatient}
                       disabled={!selectedPatient}
-                      sx={{ textTransform: "none", borderRadius: 2.2, px: 2.8 }}
                     >
                       Continue
-                    </Button>
+                    </AppButton>
                   </Stack>
                 </>
               ) : modalStep === "create" ? (
                 <>
-                  <Button color="inherit" onClick={() => setModalStep("select")} sx={{ textTransform: "none" }}>
+                  <AppButton intent="neutral" onClick={() => setModalStep("select")}>
                     Back
-                  </Button>
-                  <Button
-                    variant="contained"
+                  </AppButton>
+                  <AppButton
+                    intent="primary"
                     endIcon={<ArrowForwardRoundedIcon />}
                     onClick={handleCreatePatientAndContinue}
-                    sx={{ textTransform: "none", borderRadius: 2.2, px: 2.8 }}
                   >
-                    Create & Continue
-                  </Button>
+                    Create &amp; Continue
+                  </AppButton>
                 </>
               ) : (
                 <>
-                  <Button color="inherit" onClick={() => setModalStep("select")} sx={{ textTransform: "none" }}>
+                  <AppButton intent="neutral" onClick={() => setModalStep("select")}>
                     Back
-                  </Button>
-                  <Button
-                    variant="contained"
+                  </AppButton>
+                  <AppButton
+                    intent="primary"
                     endIcon={<ArrowForwardRoundedIcon />}
                     onClick={handleStartConsultFlow}
                     disabled={!selectedMode}
-                    sx={{ textTransform: "none", borderRadius: 2.2, px: 2.8 }}
                   >
                     {selectedMode === "upload" ? "Select File" : "Start Recording"}
-                  </Button>
+                  </AppButton>
                 </>
               )}
             </DialogActions>

@@ -14,6 +14,7 @@ import {
   Divider,
   LinearProgress
 } from "@mui/material";
+import AppButton from "@/components/ui/AppButton";
 import { alpha } from "@mui/material/styles";
 import MicRoundedIcon from "@mui/icons-material/MicRounded";
 import UploadFileRoundedIcon from "@mui/icons-material/UploadFileRounded";
@@ -128,13 +129,6 @@ const MicOrb = styled(Box, {
       )}`
 }));
 
-const PrimaryWideButton = styled(Button)(({ theme }) => ({
-  borderRadius: 999,
-  textTransform: "none",
-  fontWeight: 700,
-  fontSize: "1rem",
-  padding: theme.spacing(1.2, 2.4)
-}));
 
 const UploadDropzone = styled(Box, {
   shouldForwardProp: (prop) => prop !== "active"
@@ -453,13 +447,12 @@ export default function Dashboard({ mode }: DashboardProps) {
                   {todayLabel}
                 </Typography>
               </Box>
-              <Button
-                variant="contained"
-                sx={{ borderRadius: 2.2, textTransform: "none", fontWeight: 700, px: 2, py: 0.8, fontSize: "0.95rem" }}
+              <AppButton
+                intent="primary"
                 onClick={() => router.push("/start-consult")}
               >
                 + New Consult
-              </Button>
+              </AppButton>
             </Stack>
 
             <Box
@@ -529,13 +522,13 @@ export default function Dashboard({ mode }: DashboardProps) {
                       RECENT CONSULTATIONS
                     </Typography>
                   </Stack>
-                  <Button
+                  <AppButton
+                    intent="ghost"
                     size="small"
                     onClick={() => router.push("/my-recordings")}
-                    sx={{ textTransform: "none", fontWeight: 700 }}
                   >
                     VIEW ALL →
-                  </Button>
+                  </AppButton>
                 </Stack>
                 <Stack divider={<Divider flexItem />}>
                   {(recentConsultations.length ? recentConsultations : [
@@ -609,18 +602,18 @@ export default function Dashboard({ mode }: DashboardProps) {
                   </Typography>
                 </Stack>
                 <Stack spacing={1.2}>
-                  <Button variant="outlined" startIcon={<MicRoundedIcon />} sx={{ justifyContent: "flex-start", textTransform: "none", borderRadius: 1.6, py: 0.95, fontSize: "0.96rem", bgcolor: "rgba(255,255,255,0.75)", borderColor: (theme) => alpha(theme.palette.primary.main, 0.35) }} onClick={() => router.push("/start-consult?mode=record")}>
+                  <AppButton intent="secondary" startIcon={<MicRoundedIcon />} sx={{ justifyContent: "flex-start" }} fullWidth onClick={() => router.push("/start-consult?mode=record")}>
                     Start Live Recording
-                  </Button>
-                  <Button variant="outlined" startIcon={<UploadFileRoundedIcon />} sx={{ justifyContent: "flex-start", textTransform: "none", borderRadius: 1.6, py: 0.95, fontSize: "0.96rem", bgcolor: "rgba(255,255,255,0.75)", borderColor: (theme) => alpha(theme.palette.primary.main, 0.35) }} onClick={() => router.push("/start-consult?mode=upload")}>
+                  </AppButton>
+                  <AppButton intent="secondary" startIcon={<UploadFileRoundedIcon />} sx={{ justifyContent: "flex-start" }} fullWidth onClick={() => router.push("/start-consult?mode=upload")}>
                     Upload Audio File
-                  </Button>
-                  <Button variant="outlined" startIcon={<ManageAccountsRoundedIcon />} sx={{ justifyContent: "flex-start", textTransform: "none", borderRadius: 1.6, py: 0.95, fontSize: "0.96rem", bgcolor: "rgba(255,255,255,0.75)", borderColor: (theme) => alpha(theme.palette.primary.main, 0.35) }} onClick={() => router.push("/patients")}>
+                  </AppButton>
+                  <AppButton intent="secondary" startIcon={<ManageAccountsRoundedIcon />} sx={{ justifyContent: "flex-start" }} fullWidth onClick={() => router.push("/patients")}>
                     Manage Patients
-                  </Button>
-                  <Button variant="outlined" startIcon={<PendingActionsRoundedIcon />} sx={{ justifyContent: "flex-start", textTransform: "none", borderRadius: 1.6, py: 0.95, fontSize: "0.96rem", bgcolor: "rgba(255,255,255,0.75)", borderColor: (theme) => alpha(theme.palette.primary.main, 0.35) }} onClick={() => router.push("/my-recordings")}>
+                  </AppButton>
+                  <AppButton intent="secondary" startIcon={<PendingActionsRoundedIcon />} sx={{ justifyContent: "flex-start" }} fullWidth onClick={() => router.push("/my-recordings")}>
                     Pending Reviews
-                  </Button>
+                  </AppButton>
                 </Stack>
               </Box>
             </Box>
@@ -653,9 +646,9 @@ export default function Dashboard({ mode }: DashboardProps) {
                   <Typography variant="body2" color="text.secondary">
                     {patient.mrn || "-"}
                   </Typography>
-                  <Button size="small" variant="outlined" onClick={() => setSelectedPatient(patient)}>
+                  <AppButton intent="secondary" size="small" onClick={() => setSelectedPatient(patient)}>
                     Select
-                  </Button>
+                  </AppButton>
                 </PatientRow>
               ))}
             </Stack>
@@ -712,9 +705,9 @@ export default function Dashboard({ mode }: DashboardProps) {
                 }
                 label="Consent received"
               />
-              <Button variant="contained" onClick={handleCreatePatient}>
-                Save patient
-              </Button>
+              <AppButton intent="primary" onClick={() => handleCreatePatient()}>
+                Save Patient
+              </AppButton>
             </ModalForm>
           </Stack>
         </Section>
@@ -748,9 +741,9 @@ export default function Dashboard({ mode }: DashboardProps) {
                   <Typography variant="body2" color="text.secondary">
                     {patient.mrn || "-"}
                   </Typography>
-                  <Button size="small" variant="contained" onClick={() => setSelectedPatient(patient)}>
+                  <AppButton intent="primary" size="small" onClick={() => setSelectedPatient(patient)}>
                     Use Patient
-                  </Button>
+                  </AppButton>
                 </PatientRow>
               ))}
             </Stack>
@@ -801,9 +794,9 @@ export default function Dashboard({ mode }: DashboardProps) {
                 }
                 label="Consent received"
               />
-              <Button variant="contained" onClick={() => handleCreatePatient(true)}>
+              <AppButton intent="primary" onClick={() => handleCreatePatient(true)}>
                 Create and Continue
-              </Button>
+              </AppButton>
             </ModalForm>
           </Stack>
         </Section>
@@ -880,13 +873,14 @@ export default function Dashboard({ mode }: DashboardProps) {
                   <Typography variant="body2" color="text.secondary" mt={0.5}>
                     MP3, WAV, M4A, WEBM supported
                   </Typography>
-                  <PrimaryWideButton
-                    variant="contained"
+                  <AppButton
+                    intent="primary"
+                    size="large"
                     sx={{ mt: 2 }}
                     onClick={() => fileInputRef.current?.click()}
                   >
                     Browse device
-                  </PrimaryWideButton>
+                  </AppButton>
                 </UploadDropzone>
               ) : (
                 <Stack spacing={1.5} alignItems="center">
@@ -903,14 +897,15 @@ export default function Dashboard({ mode }: DashboardProps) {
                         ? "Recording stopped. Generate note below."
                         : "Tap the orb or button below to begin recording."}
                   </Typography>
-                  <PrimaryWideButton
-                    variant="contained"
+                  <AppButton
+                    intent={isRecording ? "danger" : "primary"}
+                    size="large"
                     startIcon={<MicRoundedIcon />}
                     onClick={isRecording ? stopRecording : startRecording}
                     sx={{ minWidth: 430, maxWidth: "100%" }}
                   >
                     {isRecording ? "Stop Recording" : "Start Recording"}
-                  </PrimaryWideButton>
+                  </AppButton>
                 </Stack>
               )}
             </Box>
@@ -924,14 +919,16 @@ export default function Dashboard({ mode }: DashboardProps) {
                 justifyContent: "center"
               }}
             >
-              <PrimaryWideButton
-                variant="contained"
+              <AppButton
+                intent="primary"
+                size="large"
                 disabled={!consultReady || consultStage === "processing" || noteReady}
+                loading={consultStage === "processing"}
                 onClick={startGeneration}
                 sx={{ minWidth: 430, maxWidth: "100%" }}
               >
                 Generate Note
-              </PrimaryWideButton>
+              </AppButton>
             </Box>
           </CenterConsultCard>
 
@@ -1036,13 +1033,14 @@ export default function Dashboard({ mode }: DashboardProps) {
             </Box>
 
             <Box sx={{ p: 2 }}>
-              <PrimaryWideButton
-                variant="contained"
+              <AppButton
+                intent="success"
+                size="large"
                 disabled={!noteReady}
-                sx={{ width: "100%", bgcolor: "#10b981", "&:hover": { bgcolor: "#059669" } }}
+                fullWidth
               >
-                Review & Sign Off
-              </PrimaryWideButton>
+                Review &amp; Sign Off
+              </AppButton>
             </Box>
           </RightConsultCard>
         </ConsultationGrid>

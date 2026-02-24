@@ -5,12 +5,12 @@ import styled from "@emotion/styled";
 import { alpha } from "@mui/material/styles";
 import {
   Box,
-  Button,
   Chip,
   IconButton,
   Stack,
   Typography
 } from "@mui/material";
+import AppButton from "@/components/ui/AppButton";
 import ViewModuleRoundedIcon from "@mui/icons-material/ViewModuleRounded";
 import ViewListRoundedIcon from "@mui/icons-material/ViewListRounded";
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
@@ -171,13 +171,9 @@ export default function MyRecordingsPage() {
               >
                 <ViewListRoundedIcon fontSize="small" />
               </IconButton>
-              <Button
-                variant="outlined"
-                startIcon={<FilterListRoundedIcon />}
-                sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700 }}
-              >
+              <AppButton intent="neutral" startIcon={<FilterListRoundedIcon />}>
                 Filter
-              </Button>
+              </AppButton>
             </Stack>
           </Stack>
 
