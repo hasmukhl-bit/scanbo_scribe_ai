@@ -3,7 +3,7 @@
     {
       "id": 1,
       "username": "demo.doctor",
-      "email": "demo.doctor@scanbo.ai",
+      "email": "demo.doctor@gmail.com",
       "password": "Scanbo@123",
       "name": "Demo Doctor",
       "role": "Physician"
@@ -11,7 +11,7 @@
     {
       "id": 2,
       "username": "admin",
-      "email": "admin@scanbo.ai",
+      "email": "admin@gmail.com",
       "password": "admin",
       "name": "Admin",
       "role": "Admin"
