@@ -4,8 +4,8 @@ import * as React from "react";
 import styled from "@emotion/styled";
 import {
   Box,
-  Button,
   Chip,
+  CircularProgress,
   Stack,
   TextField,
   Typography,
@@ -28,10 +28,15 @@ import HistoryEduRoundedIcon from "@mui/icons-material/HistoryEduRounded";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import ManageAccountsRoundedIcon from "@mui/icons-material/ManageAccountsRounded";
 import PendingActionsRoundedIcon from "@mui/icons-material/PendingActionsRounded";
+import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
+import WbSunnyRoundedIcon from "@mui/icons-material/WbSunnyRounded";
+import RateReviewRoundedIcon from "@mui/icons-material/RateReviewRounded";
+import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import type { ChangeEvent, DragEvent } from "react";
-import { apiGet, apiPost } from "@/lib/api-client";
+import { apiGet, apiPost, apiPatch } from "@/lib/api-client";
 import type { Consultation, Patient } from "@/lib/types";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useConsultDialog } from "@/context/ConsultDialogContext";
 
 const Section = styled(Box)(({ theme }) => ({
   borderRadius: 12,
@@ -66,47 +71,6 @@ const ModalForm = styled(Stack)(({ theme }) => ({
   gap: theme.spacing(2)
 }));
 
-const ConsultationGrid = styled(Box)(({ theme }) => ({
-  display: "grid",
-  gap: theme.spacing(2),
-  gridTemplateColumns: "1fr",
-  [theme.breakpoints.up("lg")]: {
-    gridTemplateColumns: "minmax(0, 1fr) 420px"
-  }
-}));
-
-const ConsultPanel = styled(Box)(({ theme }) => ({
-  borderRadius: 14,
-  border: `1px solid ${theme.palette.divider}`,
-  backgroundColor: theme.palette.background.default
-}));
-
-const CenterConsultCard = styled(ConsultPanel)(({ theme }) => ({
-  padding: theme.spacing(2.5),
-  display: "flex",
-  flexDirection: "column",
-  gap: theme.spacing(2),
-  minHeight: 700
-}));
-
-const RightConsultCard = styled(ConsultPanel)(({ theme }) => ({
-  padding: theme.spacing(2),
-  display: "flex",
-  flexDirection: "column",
-  gap: theme.spacing(1.75)
-}));
-
-const OptionButton = styled(Button, {
-  shouldForwardProp: (prop) => prop !== "active"
-})<{ active?: boolean }>(({ theme, active }) => ({
-  borderRadius: 999,
-  textTransform: "none",
-  fontWeight: 600,
-  padding: theme.spacing(0.6, 1.6),
-  border: `1px solid ${active ? alpha(theme.palette.primary.main, 0.4) : theme.palette.divider}`,
-  color: active ? theme.palette.primary.main : theme.palette.text.secondary,
-  backgroundColor: active ? alpha(theme.palette.primary.main, 0.1) : theme.palette.background.paper
-}));
 
 const MicOrb = styled(Box, {
   shouldForwardProp: (prop) => prop !== "recording"
@@ -114,19 +78,18 @@ const MicOrb = styled(Box, {
   width: 168,
   height: 168,
   borderRadius: "50%",
-  margin: "0 auto",
+  flexShrink: 0,
   display: "grid",
   placeItems: "center",
   color: "#fff",
+  position: "relative",
+  zIndex: 1,
   background: recording
-    ? "linear-gradient(180deg, #ef476f 0%, #d72652 100%)"
-    : "linear-gradient(180deg, #2891f5 0%, #156fbd 100%)",
+    ? `linear-gradient(180deg, ${theme.palette.error.main} 0%, ${theme.palette.error.dark} 100%)`
+    : `linear-gradient(180deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
   boxShadow: recording
-    ? `0 0 0 10px ${alpha("#ef476f", 0.1)}, 0 24px 44px ${alpha("#ef476f", 0.35)}`
-    : `0 0 0 10px ${alpha(theme.palette.primary.main, 0.1)}, 0 24px 44px ${alpha(
-        theme.palette.primary.main,
-        0.26
-      )}`
+    ? `0 0 0 12px ${alpha(theme.palette.error.main, 0.1)}, 0 24px 48px ${alpha(theme.palette.error.main, 0.3)}`
+    : `0 0 0 12px ${alpha(theme.palette.primary.main, 0.1)}, 0 24px 48px ${alpha(theme.palette.primary.main, 0.25)}`
 }));
 
 
@@ -159,6 +122,7 @@ function formatTime(total: number) {
 export default function Dashboard({ mode }: DashboardProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { openStartConsultDialog } = useConsultDialog();
   const lastStartFlowRef = React.useRef<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const [patients, setPatients] = React.useState<Patient[]>([]);
@@ -171,6 +135,7 @@ export default function Dashboard({ mode }: DashboardProps) {
   const [uploadedFileName, setUploadedFileName] = React.useState<string | null>(null);
   const [processingProgress, setProcessingProgress] = React.useState(0);
   const [dragActive, setDragActive] = React.useState(false);
+  const [signingOff, setSigningOff] = React.useState(false);
   const [form, setForm] = React.useState({
     fullName: "",
     age: "",
@@ -368,6 +333,46 @@ export default function Dashboard({ mode }: DashboardProps) {
     setRecordingMode("record");
   };
 
+  const handleSignOff = async () => {
+    if (!selectedPatient || signingOff) return;
+    setSigningOff(true);
+    try {
+      // Find an existing "In Progress" consultation for this patient, or create a new one
+      const existing = consultations.find(
+        (c) => c.patientId === selectedPatient.id && c.status === "In Progress"
+      );
+      if (existing) {
+        await apiPatch<Consultation>("/consultations", existing.id, {
+          status: "Signed",
+          summary: `${selectedPatient.fullName} – ${selectedPatient.age}Y ${selectedPatient.gender}. Presents with progressive dyspnea over 3–4 days. COPD exacerbation likely. Prednisolone 40mg prescribed.`,
+          duration: `${Math.max(recordSeconds, 1)}m`
+        });
+      } else {
+        await apiPost<Consultation>("/consultations", {
+          patientId: selectedPatient.id,
+          startedAt: new Date().toISOString(),
+          status: "Signed",
+          summary: `${selectedPatient.fullName} – ${selectedPatient.age}Y ${selectedPatient.gender}. Presents with progressive dyspnea over 3–4 days. COPD exacerbation likely. Prednisolone 40mg prescribed.`,
+          duration: `${Math.max(recordSeconds, 1)}m`,
+          codes: ["J44.1", "I10", "H53.9"],
+          soapNote: {
+            subjective: `${selectedPatient.fullName}, ${selectedPatient.age}-year-old ${selectedPatient.gender.toLowerCase()}, presents with progressive dyspnea over 3–4 days. Rescue inhaler efficacy appears reduced and medication adherence concerns are noted.`,
+            objective: "Vitals stable. SpO2 92% on room air. Bilateral expiratory wheeze on auscultation.",
+            assessment: "COPD with acute exacerbation (J44.1). Essential hypertension (I10).",
+            plan: "Prednisolone 40mg for 5 days. Review inhaler technique. Follow up in 1 week."
+          },
+          medications: [
+            { name: "Hydrochlorothiazide", dose: "12.5mg", frequency: "Once daily", type: "Current" },
+            { name: "Prednisolone", dose: "40mg", frequency: "Once daily for 5 days", type: "New" }
+          ]
+        });
+      }
+      router.push("/my-recordings");
+    } catch {
+      setSigningOff(false);
+    }
+  };
+
   const showDashboard = mode === "dashboard";
   const showPatients = mode === "patients";
   const showConsultation = mode === "consultation";
@@ -431,193 +436,355 @@ export default function Dashboard({ mode }: DashboardProps) {
       {showDashboard ? (
         <Box
           sx={{
-            p: { xs: 2, md: 3 },
             minHeight: "calc(100vh - 72px)",
             borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-            backgroundColor: "background.paper"
+            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.02)
           }}
         >
-          <Stack spacing={2.5}>
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-              <Box>
-                <Typography variant="h5" fontWeight={800}>
-                  Good morning, Dr. Lohar
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.2 }}>
-                  {todayLabel}
-                </Typography>
-              </Box>
-              <AppButton
-                intent="primary"
-                onClick={() => router.push("/start-consult")}
-              >
-                + New Consult
-              </AppButton>
-            </Stack>
-
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" },
-                gap: 1.6
-              }}
-            >
-              {dashboardStats.map((item) => (
+          {/* ── HERO HEADER ── */}
+          <Box
+            sx={{
+              px: { xs: 2.5, sm: 3 },
+              pt: 2.5,
+              pb: 2,
+              background: (theme) =>
+                `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.secondary.light} 100%)`,
+              borderBottom: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.15)}`
+            }}
+          >
+            <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ sm: "center" }} spacing={1.5}>
+              <Stack direction="row" spacing={1.5} alignItems="center">
                 <Box
-                  key={item.label}
                   sx={{
-                    border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.14)}`,
-                    borderRadius: 2.4,
-                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
-                    background: "linear-gradient(180deg, rgba(255,255,255,0.86) 0%, rgba(232,244,255,0.72) 100%)",
-                    boxShadow: (theme) => `0 10px 24px ${alpha(theme.palette.primary.main, 0.08)}`,
-                    p: 1.6,
-                    position: "relative"
+                    width: 46,
+                    height: 46,
+                    borderRadius: 2.5,
+                    flexShrink: 0,
+                    display: "grid",
+                    placeItems: "center",
+                    background: (theme) =>
+                      `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                    color: "#fff",
+                    boxShadow: (theme) => `0 4px 14px ${alpha(theme.palette.primary.main, 0.35)}`
                   }}
                 >
-                  <Box
-                    sx={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: 1.5,
-                      display: "grid",
-                      placeItems: "center",
-                      color: item.tone,
-                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1)
-                      ,
-                      position: "absolute",
-                      top: 14,
-                      right: 14
-                    }}
-                  >
-                    {item.icon}
-                  </Box>
-                  <Typography variant="h5" fontWeight={800} sx={{ mt: 0.2 }}>
-                    {item.value}
+                  <WbSunnyRoundedIcon />
+                </Box>
+                <Box>
+                  <Typography variant="h5" fontWeight={800} lineHeight={1.2}>
+                    Good morning, Dr. Lohar
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                    {item.label}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: item.tone, fontWeight: 700, mt: 0.7 }}>
-                    {item.helper}
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.15 }}>
+                    {todayLabel}
                   </Typography>
                 </Box>
-              ))}
-            </Box>
+              </Stack>
+              <AppButton
+                intent="primary"
+                startIcon={<MicRoundedIcon />}
+                onClick={() => openStartConsultDialog()}
+              >
+                New Consult
+              </AppButton>
+            </Stack>
+          </Box>
 
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 1fr) 380px" }, gap: 1.6, alignItems: "start" }}>
+          <Box sx={{ px: { xs: 2.5, sm: 3 }, py: 2.5 }}>
+            <Stack spacing={2.5}>
+
+              {/* ── STATS GRID ── */}
               <Box
                 sx={{
-                  border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.14)}`,
-                  borderRadius: 2.4,
-                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
-                  background: "linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(236,246,255,0.74) 100%)",
-                  boxShadow: (theme) => `0 12px 28px ${alpha(theme.palette.primary.main, 0.08)}`
+                  display: "grid",
+                  gridTemplateColumns: { xs: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" },
+                  gap: 1.6
                 }}
               >
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ px: 2, py: 1.6, borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <HistoryEduRoundedIcon color="primary" fontSize="small" />
-                    <Typography variant="subtitle1" fontWeight={800}>
-                      RECENT CONSULTATIONS
-                    </Typography>
-                  </Stack>
-                  <AppButton
-                    intent="ghost"
-                    size="small"
-                    onClick={() => router.push("/my-recordings")}
+                {dashboardStats.map((item) => {
+                  const colorKey = item.tone.split(".")[0] as "primary" | "success" | "warning";
+                  return (
+                    <Box
+                      key={item.label}
+                      sx={{
+                        border: (theme) => `1px solid ${theme.palette.divider}`,
+                        borderRadius: 2.5,
+                        bgcolor: "background.paper",
+                        boxShadow: (theme) => `0 2px 8px ${alpha(theme.palette.primary.main, 0.05)}`,
+                        p: 2,
+                        display: "flex",
+                        alignItems: "flex-start",
+                        justifyContent: "space-between",
+                        gap: 1.5
+                      }}
+                    >
+                      <Box>
+                        <Typography variant="h4" fontWeight={800} lineHeight={1} color="text.primary">
+                          {item.value}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" fontWeight={600} sx={{ mt: 0.25 }}>
+                          {item.label}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: item.tone, fontWeight: 700, mt: 0.5, display: "block" }}>
+                          {item.helper}
+                        </Typography>
+                      </Box>
+                      <Box
+                        sx={{
+                          width: 42,
+                          height: 42,
+                          borderRadius: 2,
+                          flexShrink: 0,
+                          display: "grid",
+                          placeItems: "center",
+                          backgroundColor: (theme) => alpha(theme.palette[colorKey]?.main ?? theme.palette.primary.main, 0.1),
+                          color: item.tone,
+                          border: (theme) => `1px solid ${alpha(theme.palette[colorKey]?.main ?? theme.palette.primary.main, 0.2)}`
+                        }}
+                      >
+                        {item.icon}
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </Box>
+
+              {/* ── MAIN GRID: Consultations + Quick Actions ── */}
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 1fr) 360px" }, gap: 2, alignItems: "start" }}>
+
+                {/* ── RECENT CONSULTATIONS ── */}
+                <Box
+                  sx={{
+                    border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.14)}`,
+                    borderRadius: 2.5,
+                    backgroundColor: "background.paper",
+                    boxShadow: (theme) => `0 4px 20px ${alpha(theme.palette.primary.main, 0.06)}`,
+                    overflow: "hidden"
+                  }}
+                >
+                  {/* Card header */}
+                  <Box
+                    sx={{
+                      px: 2.5,
+                      py: 1.6,
+                      background: (theme) =>
+                        `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.secondary.light} 100%)`,
+                      borderBottom: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.15)}`
+                    }}
                   >
-                    VIEW ALL →
-                  </AppButton>
-                </Stack>
-                <Stack divider={<Divider flexItem />}>
-                  {(recentConsultations.length ? recentConsultations : [
-                    { id: 1, name: "Riya Sharma", meta: "34Y Female", time: "2h ago", status: "In Progress" },
-                    { id: 2, name: "Arjun Mehta", meta: "52Y Male", time: "4h ago", status: "Final" },
-                    { id: 3, name: "Neha Kapoor", meta: "28Y Female", time: "Yesterday", status: "Final" },
-                    { id: 4, name: "Mehul Gupta", meta: "45Y Male", time: "Yesterday", status: "Draft" },
-                    { id: 5, name: "Priya Desai", meta: "61Y Female", time: "2 days ago", status: "Final" }
-                  ]).map((item) => (
-                    <Stack key={item.id} direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2, py: 1.5 }}>
-                      <Stack direction="row" spacing={1.3} alignItems="center">
+                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                      <Stack direction="row" spacing={1.25} alignItems="center">
                         <Box
                           sx={{
-                            width: 38,
-                            height: 38,
-                            borderRadius: "50%",
+                            width: 30,
+                            height: 30,
+                            borderRadius: 1.5,
                             display: "grid",
                             placeItems: "center",
+                            background: (theme) =>
+                              `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
                             color: "#fff",
-                            fontWeight: 800,
-                            fontSize: "0.95rem",
-                            bgcolor: "primary.main"
+                            flexShrink: 0
                           }}
                         >
-                          {item.name
-                            .split(" ")
-                            .filter(Boolean)
-                            .slice(0, 2)
-                            .map((part) => part[0])
-                            .join("")
-                            .toUpperCase()}
+                          <HistoryEduRoundedIcon sx={{ fontSize: 16 }} />
                         </Box>
-                        <Box>
-                          <Typography variant="subtitle1" fontWeight={700}>
-                            {item.name}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {item.meta}
-                          </Typography>
-                        </Box>
-                      </Stack>
-                      <Stack direction="row" alignItems="center" spacing={1.2}>
-                        <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                          {item.time}
+                        <Typography variant="subtitle2" fontWeight={800} sx={{ letterSpacing: 0.5 }}>
+                          RECENT CONSULTATIONS
                         </Typography>
-                        <Chip
-                          size="small"
-                          label={item.status === "Final" ? "Signed" : item.status === "Draft" ? "Processing" : "Review"}
-                          color={item.status === "Final" ? "success" : item.status === "Draft" ? "info" : "warning"}
-                        />
                       </Stack>
+                      <AppButton
+                        intent="ghost"
+                        size="small"
+                        endIcon={<ArrowForwardRoundedIcon sx={{ fontSize: 14 }} />}
+                        onClick={() => router.push("/my-recordings")}
+                      >
+                        View all
+                      </AppButton>
                     </Stack>
-                  ))}
-                </Stack>
-              </Box>
+                  </Box>
 
-              <Box
-                sx={{
-                  border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.14)}`,
-                  borderRadius: 2.4,
-                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
-                  background: "linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(236,246,255,0.74) 100%)",
-                  boxShadow: (theme) => `0 12px 28px ${alpha(theme.palette.primary.main, 0.08)}`,
-                  p: 1.6
-                }}
-              >
-                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.2 }}>
-                  <BoltRoundedIcon color="primary" fontSize="small" />
-                  <Typography variant="subtitle1" fontWeight={800}>
-                    QUICK ACTIONS
-                  </Typography>
-                </Stack>
-                <Stack spacing={1.2}>
-                  <AppButton intent="secondary" startIcon={<MicRoundedIcon />} sx={{ justifyContent: "flex-start" }} fullWidth onClick={() => router.push("/start-consult?mode=record")}>
-                    Start Live Recording
-                  </AppButton>
-                  <AppButton intent="secondary" startIcon={<UploadFileRoundedIcon />} sx={{ justifyContent: "flex-start" }} fullWidth onClick={() => router.push("/start-consult?mode=upload")}>
-                    Upload Audio File
-                  </AppButton>
-                  <AppButton intent="secondary" startIcon={<ManageAccountsRoundedIcon />} sx={{ justifyContent: "flex-start" }} fullWidth onClick={() => router.push("/patients")}>
-                    Manage Patients
-                  </AppButton>
-                  <AppButton intent="secondary" startIcon={<PendingActionsRoundedIcon />} sx={{ justifyContent: "flex-start" }} fullWidth onClick={() => router.push("/my-recordings")}>
-                    Pending Reviews
-                  </AppButton>
-                </Stack>
+                  {/* Rows */}
+                  <Stack divider={<Divider flexItem />}>
+                    {(recentConsultations.length ? recentConsultations : [
+                      { id: 1, name: "Riya Sharma",  meta: "34Y Female", time: "2h ago",      status: "In Progress" },
+                      { id: 2, name: "Arjun Mehta",  meta: "52Y Male",   time: "4h ago",      status: "Final"       },
+                      { id: 3, name: "Neha Kapoor",  meta: "28Y Female", time: "Yesterday",   status: "Final"       },
+                      { id: 4, name: "Mehul Gupta",  meta: "45Y Male",   time: "Yesterday",   status: "Draft"       },
+                      { id: 5, name: "Priya Desai",  meta: "61Y Female", time: "2 days ago",  status: "Final"       }
+                    ]).map((item) => {
+                      const chipLabel  = item.status === "Final" ? "Signed" : item.status === "Draft" ? "Processing" : "Review";
+                      const chipColor  = item.status === "Final" ? "success" : item.status === "Draft" ? "info" : "warning";
+                      const chipIcon   = item.status === "Final"
+                        ? <TaskAltRoundedIcon sx={{ fontSize: 11 }} />
+                        : item.status === "Draft"
+                          ? <HourglassBottomRoundedIcon sx={{ fontSize: 11 }} />
+                          : <RateReviewRoundedIcon sx={{ fontSize: 11 }} />;
+                      return (
+                        <Stack
+                          key={item.id}
+                          direction="row"
+                          alignItems="center"
+                          justifyContent="space-between"
+                          sx={{
+                            px: 2.5,
+                            py: 1.6,
+                            transition: "background-color 0.15s ease",
+                            "&:hover": {
+                              backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.03)
+                            }
+                          }}
+                        >
+                          <Stack direction="row" spacing={1.5} alignItems="center">
+                            {/* Avatar */}
+                            <Box
+                              sx={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: "50%",
+                                flexShrink: 0,
+                                display: "grid",
+                                placeItems: "center",
+                                color: "#fff",
+                                fontWeight: 700,
+                                fontSize: "0.82rem",
+                                background: (theme) =>
+                                  `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                                boxShadow: (theme) => `0 3px 8px ${alpha(theme.palette.primary.main, 0.28)}`
+                              }}
+                            >
+                              {item.name.split(" ").filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase()}
+                            </Box>
+                            <Box>
+                              <Typography variant="subtitle2" fontWeight={700}>
+                                {item.name}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {item.meta}
+                              </Typography>
+                            </Box>
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={1.25}>
+                            <Stack direction="row" spacing={0.4} alignItems="center">
+                              <AccessTimeRoundedIcon sx={{ fontSize: 12, color: "text.disabled" }} />
+                              <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                                {item.time}
+                              </Typography>
+                            </Stack>
+                            <Chip
+                              size="small"
+                              icon={chipIcon}
+                              label={chipLabel}
+                              color={chipColor as "success" | "info" | "warning"}
+                              sx={{ fontWeight: 700, fontSize: "0.7rem", height: 22 }}
+                            />
+                          </Stack>
+                        </Stack>
+                      );
+                    })}
+                  </Stack>
+                </Box>
+
+                {/* ── QUICK ACTIONS ── */}
+                <Box
+                  sx={{
+                    border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.14)}`,
+                    borderRadius: 2.5,
+                    backgroundColor: "background.paper",
+                    boxShadow: (theme) => `0 4px 20px ${alpha(theme.palette.primary.main, 0.06)}`,
+                    overflow: "hidden"
+                  }}
+                >
+                  {/* Card header */}
+                  <Box
+                    sx={{
+                      px: 2.5,
+                      py: 1.6,
+                      background: (theme) =>
+                        `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.secondary.light} 100%)`,
+                      borderBottom: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.15)}`
+                    }}
+                  >
+                    <Stack direction="row" spacing={1.25} alignItems="center">
+                      <Box
+                        sx={{
+                          width: 30,
+                          height: 30,
+                          borderRadius: 1.5,
+                          display: "grid",
+                          placeItems: "center",
+                          background: (theme) =>
+                            `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                          color: "#fff",
+                          flexShrink: 0
+                        }}
+                      >
+                        <BoltRoundedIcon sx={{ fontSize: 16 }} />
+                      </Box>
+                      <Typography variant="subtitle2" fontWeight={800} sx={{ letterSpacing: 0.5 }}>
+                        QUICK ACTIONS
+                      </Typography>
+                    </Stack>
+                  </Box>
+
+                  {/* Action rows */}
+                  {[
+                    { label: "Start Live Recording", icon: <MicRoundedIcon />,            color: "primary" as const, path: null },
+                    { label: "Upload Audio File",    icon: <UploadFileRoundedIcon />,      color: "info"    as const, path: null },
+                    { label: "Manage Patients",      icon: <ManageAccountsRoundedIcon />,  color: "success" as const, path: "/patients"                  },
+                    { label: "Pending Reviews",      icon: <PendingActionsRoundedIcon />,  color: "warning" as const, path: "/my-recordings"              }
+                  ].map((action, idx, arr) => (
+                    <Box
+                      key={action.label}
+                      onClick={() => action.path ? router.push(action.path) : openStartConsultDialog()}
+                      sx={{
+                        px: 2.5,
+                        py: 1.6,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1.5,
+                        cursor: "pointer",
+                        borderBottom: (theme) =>
+                          idx < arr.length - 1 ? `1px solid ${theme.palette.divider}` : "none",
+                        transition: "background-color 0.15s ease",
+                        "&:hover": {
+                          backgroundColor: (theme) => alpha(theme.palette[action.color].main, 0.04),
+                          "& .action-arrow": { transform: "translateX(3px)" }
+                        }
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 38,
+                          height: 38,
+                          borderRadius: 1.75,
+                          flexShrink: 0,
+                          display: "grid",
+                          placeItems: "center",
+                          backgroundColor: (theme) => alpha(theme.palette[action.color].main, 0.1),
+                          color: `${action.color}.main`,
+                          border: (theme) => `1px solid ${alpha(theme.palette[action.color].main, 0.2)}`
+                        }}
+                      >
+                        {action.icon}
+                      </Box>
+                      <Typography variant="body2" fontWeight={700} sx={{ flex: 1 }}>
+                        {action.label}
+                      </Typography>
+                      <ArrowForwardRoundedIcon
+                        className="action-arrow"
+                        sx={{
+                          fontSize: 16,
+                          color: "text.disabled",
+                          transition: "transform 0.2s ease"
+                        }}
+                      />
+                    </Box>
+                  ))}
+                </Box>
+
               </Box>
-            </Box>
-          </Stack>
+            </Stack>
+          </Box>
         </Box>
       ) : null}
 
@@ -803,120 +970,468 @@ export default function Dashboard({ mode }: DashboardProps) {
       ) : null}
 
       {showConsultation && selectedPatient ? (
-        <ConsultationGrid sx={{ gap: 0 }}>
-          <CenterConsultCard sx={{ p: 0, minHeight: 0, borderTopRightRadius: 0, borderBottomRightRadius: 0 }}>
-            <Box sx={{ p: 2.5, borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
-              <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} justifyContent="space-between" alignItems={{ md: "center" }}>
-                <Box>
-                  <Typography variant="h5" fontWeight={700}>
-                    {selectedPatient.fullName}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {selectedPatient.age}Y • {selectedPatient.gender} • Today
-                  </Typography>
-                </Box>
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  <OptionButton
-                    active={recordingMode === "record"}
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 1fr) 400px" },
+            minHeight: "calc(100vh - 72px)",
+            backgroundColor: "background.paper"
+          }}
+        >
+
+          {/* ──────────── LEFT / CENTER PANEL ──────────── */}
+          <Box sx={{ display: "flex", flexDirection: "column", borderRight: { lg: (theme) => `1px solid ${theme.palette.divider}` } }}>
+
+            {/* Patient header */}
+            <Box
+              sx={{
+                px: { xs: 2.5, sm: 3 },
+                py: 2,
+                background: (theme) =>
+                  `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.secondary.light} 100%)`,
+                borderBottom: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.15)}`
+              }}
+            >
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={1.5}
+                justifyContent="space-between"
+                alignItems={{ sm: "center" }}
+              >
+                {/* Patient info + avatar */}
+                <Stack direction="row" spacing={1.5} alignItems="center">
+                  <Box
+                    sx={{
+                      width: 46,
+                      height: 46,
+                      borderRadius: "50%",
+                      flexShrink: 0,
+                      display: "grid",
+                      placeItems: "center",
+                      fontWeight: 700,
+                      fontSize: "0.9rem",
+                      color: "#fff",
+                      background: (theme) =>
+                        `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                      boxShadow: (theme) => `0 4px 10px ${alpha(theme.palette.primary.main, 0.35)}`
+                    }}
+                  >
+                    {selectedPatient.fullName
+                      .split(" ")
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .map((p) => p[0])
+                      .join("")
+                      .toUpperCase()}
+                  </Box>
+                  <Box>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Typography variant="h6" fontWeight={700} color="text.primary">
+                        {selectedPatient.fullName}
+                      </Typography>
+                      {isRecording && (
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                            px: 1,
+                            py: 0.3,
+                            borderRadius: 999,
+                            backgroundColor: (theme) => alpha(theme.palette.error.main, 0.12),
+                            border: (theme) => `1px solid ${alpha(theme.palette.error.main, 0.3)}`
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: 7,
+                              height: 7,
+                              borderRadius: "50%",
+                              backgroundColor: "error.main",
+                              "@keyframes blink": {
+                                "0%, 100%": { opacity: 1 },
+                                "50%": { opacity: 0.25 }
+                              },
+                              animation: "blink 1.2s ease-in-out infinite"
+                            }}
+                          />
+                          <Typography
+                            variant="caption"
+                            fontWeight={800}
+                            color="error.main"
+                            sx={{ fontSize: "0.67rem", letterSpacing: 0.5 }}
+                          >
+                            LIVE
+                          </Typography>
+                        </Box>
+                      )}
+                    </Stack>
+                    <Typography variant="body2" color="text.secondary">
+                      {selectedPatient.age}Y • {selectedPatient.gender} • Today
+                    </Typography>
+                  </Box>
+                </Stack>
+
+                {/* Mode buttons */}
+                <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+                  <AppButton
+                    intent={recordingMode === "record" ? "primary" : "neutral"}
+                    size="small"
                     startIcon={<MicRoundedIcon />}
-                    onClick={() => setRecordingMode("record")}
+                    onClick={() => {
+                      setRecordingMode("record");
+                      if (recordingMode === "upload") {
+                        setConsultStage("idle");
+                        setUploadedFileName(null);
+                        setRecordSeconds(0);
+                      }
+                    }}
                   >
                     Record
-                  </OptionButton>
-                  <OptionButton
-                    active={recordingMode === "upload"}
+                  </AppButton>
+                  <AppButton
+                    intent={recordingMode === "upload" ? "primary" : "neutral"}
+                    size="small"
                     startIcon={<UploadFileRoundedIcon />}
-                    onClick={() => setRecordingMode("upload")}
+                    onClick={() => {
+                      setRecordingMode("upload");
+                      setConsultStage("idle");
+                      setUploadedFileName(null);
+                    }}
                   >
                     Upload
-                  </OptionButton>
-                  <OptionButton onClick={() => setSelectedPatient(null)}>Change Patient</OptionButton>
+                  </AppButton>
+                  <AppButton
+                    intent="neutral"
+                    size="small"
+                    onClick={() => setSelectedPatient(null)}
+                  >
+                    Change Patient
+                  </AppButton>
                 </Stack>
               </Stack>
             </Box>
 
-            <Box sx={{ px: 4, py: 3, textAlign: "center" }}>
+            {/* Recording / upload / processing area */}
+            <Box
+              sx={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                px: { xs: 2, md: 6 },
+                py: { xs: 3, md: 5 },
+                textAlign: "center"
+              }}
+            >
+              {/* ── PROCESSING STATE ── */}
               {consultStage === "processing" ? (
-                <Stack spacing={1.5} alignItems="center">
-                  <MicOrb>
-                    <AutoAwesomeRoundedIcon fontSize="large" />
-                  </MicOrb>
-                  <Typography variant="h6" fontWeight={700}>
-                    AI is working...
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Structuring SOAP sections and generating ICD recommendations.
-                  </Typography>
-                  <Box sx={{ width: "min(440px, 100%)", mt: 1 }}>
+                <Stack spacing={3} alignItems="center" sx={{ maxWidth: 420, mx: "auto" }}>
+                  <Box sx={{ position: "relative", display: "inline-flex" }}>
+                    <CircularProgress
+                      size={100}
+                      thickness={2}
+                      sx={{ color: "primary.main" }}
+                    />
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        inset: 0,
+                        display: "grid",
+                        placeItems: "center",
+                        color: "primary.main"
+                      }}
+                    >
+                      <AutoAwesomeRoundedIcon sx={{ fontSize: 36 }} />
+                    </Box>
+                  </Box>
+                  <Box>
+                    <Typography variant="h6" fontWeight={700}>
+                      AI is generating your note…
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" mt={0.5}>
+                      Structuring SOAP sections and generating ICD recommendations.
+                    </Typography>
+                  </Box>
+                  <Box sx={{ width: "100%" }}>
+                    <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.75 }}>
+                      <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                        Processing audio
+                      </Typography>
+                      <Typography variant="caption" fontWeight={800} color="primary.main">
+                        {processingProgress}%
+                      </Typography>
+                    </Stack>
                     <LinearProgress
                       variant="determinate"
                       value={processingProgress}
-                      sx={{ height: 8, borderRadius: 999 }}
+                      sx={{
+                        height: 8,
+                        borderRadius: 999,
+                        backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                        "& .MuiLinearProgress-bar": { borderRadius: 999 }
+                      }}
                     />
                   </Box>
                 </Stack>
-              ) : recordingMode === "upload" && consultStage === "idle" ? (
-                <UploadDropzone
-                  active={dragActive}
-                  onDragOver={(event) => {
-                    event.preventDefault();
-                    setDragActive(true);
-                  }}
-                  onDragLeave={() => setDragActive(false)}
-                  onDrop={handleDrop}
-                  sx={{ maxWidth: 580, mx: "auto" }}
-                >
-                  <CloudUploadRoundedIcon color="primary" sx={{ fontSize: 36, mb: 1 }} />
-                  <Typography variant="subtitle1" fontWeight={700}>
-                    Drop audio file here
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" mt={0.5}>
-                    MP3, WAV, M4A, WEBM supported
-                  </Typography>
-                  <AppButton
-                    intent="primary"
-                    size="large"
-                    sx={{ mt: 2 }}
-                    onClick={() => fileInputRef.current?.click()}
+
+              ) : recordingMode === "upload" ? (
+                /* ── UPLOAD STATE ── */
+                uploadedFileName && consultStage === "ready" ? (
+                  /* File selected — show confirmation */
+                  <Stack spacing={2.5} alignItems="center" sx={{ maxWidth: 480, mx: "auto", width: "100%" }}>
+                    <Box
+                      sx={{
+                        width: 80,
+                        height: 80,
+                        borderRadius: "50%",
+                        display: "grid",
+                        placeItems: "center",
+                        backgroundColor: (theme) => alpha(theme.palette.success.main, 0.1),
+                        border: (theme) => `2px solid ${alpha(theme.palette.success.main, 0.3)}`,
+                        color: "success.main"
+                      }}
+                    >
+                      <TaskAltRoundedIcon sx={{ fontSize: 38 }} />
+                    </Box>
+                    <Box textAlign="center">
+                      <Typography variant="h6" fontWeight={700}>
+                        File ready
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" mt={0.5}>
+                        Your audio file has been selected and is ready to process.
+                      </Typography>
+                    </Box>
+                    <Box
+                      sx={{
+                        width: "100%",
+                        px: 2,
+                        py: 1.5,
+                        borderRadius: 2.5,
+                        border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                        backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.04),
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1.5
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 38,
+                          height: 38,
+                          borderRadius: 1.5,
+                          flexShrink: 0,
+                          display: "grid",
+                          placeItems: "center",
+                          backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                          color: "primary.main"
+                        }}
+                      >
+                        <UploadFileRoundedIcon fontSize="small" />
+                      </Box>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography
+                          variant="body2"
+                          fontWeight={700}
+                          noWrap
+                          title={uploadedFileName}
+                        >
+                          {uploadedFileName}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Audio file selected
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Stack direction="row" spacing={1}>
+                      <AppButton
+                        intent="neutral"
+                        size="small"
+                        startIcon={<CloudUploadRoundedIcon />}
+                        onClick={() => {
+                          setUploadedFileName(null);
+                          setConsultStage("idle");
+                          fileInputRef.current?.click();
+                        }}
+                      >
+                        Change file
+                      </AppButton>
+                      <AppButton
+                        intent="danger"
+                        size="small"
+                        onClick={() => {
+                          setUploadedFileName(null);
+                          setConsultStage("idle");
+                        }}
+                      >
+                        Remove
+                      </AppButton>
+                    </Stack>
+                  </Stack>
+                ) : (
+                  /* No file yet — show dropzone */
+                  <UploadDropzone
+                    active={dragActive}
+                    onDragOver={(event) => {
+                      event.preventDefault();
+                      setDragActive(true);
+                    }}
+                    onDragLeave={() => setDragActive(false)}
+                    onDrop={handleDrop}
+                    sx={{ maxWidth: 520, width: "100%", mx: "auto" }}
                   >
-                    Browse device
-                  </AppButton>
-                </UploadDropzone>
+                    <Box
+                      sx={{
+                        width: 68,
+                        height: 68,
+                        borderRadius: "50%",
+                        display: "grid",
+                        placeItems: "center",
+                        mx: "auto",
+                        mb: 2,
+                        backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                        color: "primary.main"
+                      }}
+                    >
+                      <CloudUploadRoundedIcon sx={{ fontSize: 34 }} />
+                    </Box>
+                    <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+                      Drop audio file here
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      MP3, WAV, M4A, WEBM supported
+                    </Typography>
+                    <AppButton
+                      intent="primary"
+                      size="large"
+                      sx={{ mt: 2.5 }}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      Browse device
+                    </AppButton>
+                  </UploadDropzone>
+                )
+
               ) : (
-                <Stack spacing={1.5} alignItems="center">
-                  <MicOrb recording={isRecording} sx={{ width: 220, height: 220 }}>
-                    <MicRoundedIcon sx={{ fontSize: 78 }} />
-                  </MicOrb>
-                  <Typography variant="h2" fontWeight={700} sx={{ letterSpacing: 4 }}>
-                    {formatTime(recordSeconds)}
-                  </Typography>
-                  <Typography variant="body1" color="text.secondary">
+                /* ── RECORD STATE ── */
+                <Stack spacing={3} alignItems="center">
+                  {/* Pulse rings + orb */}
+                  <Box
+                    sx={{
+                      position: "relative",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 200,
+                      height: 200
+                    }}
+                  >
+                    {isRecording && (
+                      <>
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            width: "100%",
+                            height: "100%",
+                            borderRadius: "50%",
+                            backgroundColor: (theme) => alpha(theme.palette.error.main, 0.12),
+                            "@keyframes ripple1": {
+                              "0%": { transform: "scale(0.9)", opacity: 0.8 },
+                              "100%": { transform: "scale(1.65)", opacity: 0 }
+                            },
+                            animation: "ripple1 1.8s ease-out infinite"
+                          }}
+                        />
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            width: "100%",
+                            height: "100%",
+                            borderRadius: "50%",
+                            backgroundColor: (theme) => alpha(theme.palette.error.main, 0.08),
+                            "@keyframes ripple2": {
+                              "0%": { transform: "scale(0.9)", opacity: 0.6 },
+                              "100%": { transform: "scale(1.65)", opacity: 0 }
+                            },
+                            animation: "ripple2 1.8s ease-out infinite 0.55s"
+                          }}
+                        />
+                      </>
+                    )}
+                    <MicOrb recording={isRecording}>
+                      <MicRoundedIcon sx={{ fontSize: 68 }} />
+                    </MicOrb>
+                  </Box>
+
+                  {/* Styled timer */}
+                  <Box
+                    sx={{
+                      px: 3.5,
+                      py: 1.25,
+                      borderRadius: 3,
+                      backgroundColor: (theme) =>
+                        isRecording
+                          ? alpha(theme.palette.error.main, 0.06)
+                          : alpha(theme.palette.primary.main, 0.06),
+                      border: (theme) =>
+                        `1.5px solid ${alpha(
+                          isRecording ? theme.palette.error.main : theme.palette.primary.main,
+                          0.2
+                        )}`
+                    }}
+                  >
+                    <Typography
+                      variant="h3"
+                      fontWeight={700}
+                      sx={{
+                        letterSpacing: 5,
+                        fontVariantNumeric: "tabular-nums",
+                        lineHeight: 1,
+                        color: isRecording ? "error.main" : "primary.main"
+                      }}
+                    >
+                      {formatTime(recordSeconds)}
+                    </Typography>
+                  </Box>
+
+                  {/* Status text */}
+                  <Typography
+                    variant="body1"
+                    color="text.secondary"
+                    sx={{ maxWidth: 340 }}
+                  >
                     {isRecording
-                      ? "Recording in progress..."
+                      ? "Recording in progress…"
                       : consultReady
-                        ? "Recording stopped. Generate note below."
-                        : "Tap the orb or button below to begin recording."}
+                        ? "Recording complete. Generate your clinical note below."
+                        : "Tap the button below to begin recording your consultation."}
                   </Typography>
+
+                  {/* Stop / Start button */}
                   <AppButton
                     intent={isRecording ? "danger" : "primary"}
                     size="large"
                     startIcon={<MicRoundedIcon />}
                     onClick={isRecording ? stopRecording : startRecording}
-                    sx={{ minWidth: 430, maxWidth: "100%" }}
+                    sx={{ minWidth: 260, maxWidth: "100%" }}
                   >
                     {isRecording ? "Stop Recording" : "Start Recording"}
                   </AppButton>
                 </Stack>
               )}
             </Box>
+
+            {/* Generate Note footer */}
             <Box
               sx={{
                 borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-                mt: 1,
-                px: 3,
+                px: { xs: 2, md: 4 },
                 py: 2,
-                display: "flex",
-                justifyContent: "center"
+                backgroundColor: (theme) =>
+                  consultReady && !noteReady && consultStage !== "processing"
+                    ? alpha(theme.palette.primary.main, 0.02)
+                    : "background.paper"
               }}
             >
               <AppButton
@@ -925,125 +1440,274 @@ export default function Dashboard({ mode }: DashboardProps) {
                 disabled={!consultReady || consultStage === "processing" || noteReady}
                 loading={consultStage === "processing"}
                 onClick={startGeneration}
-                sx={{ minWidth: 430, maxWidth: "100%" }}
+                fullWidth
+                startIcon={<AutoAwesomeRoundedIcon />}
               >
                 Generate Note
               </AppButton>
             </Box>
-          </CenterConsultCard>
+          </Box>
 
-          <RightConsultCard sx={{ p: 0, borderTopLeftRadius: 0, borderBottomLeftRadius: 0, minHeight: 0 }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ px: 2, py: 1.8, borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
-              <Typography variant="subtitle1" fontWeight={800}>
-                CLINICAL NOTE PREVIEW
-              </Typography>
-              <Chip
-                size="small"
-                label={noteReady ? "94% Confidence" : consultStage === "processing" ? "Processing" : "Awaiting audio"}
-                color={noteReady ? "success" : consultStage === "processing" ? "primary" : "default"}
-              />
-            </Stack>
+          {/* ──────────── RIGHT PANEL ──────────── */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              borderLeft: (theme) => `1px solid ${theme.palette.divider}`,
+              backgroundColor: "background.paper",
+              minHeight: 0
+            }}
+          >
+            {/* Panel header */}
+            <Box
+              sx={{
+                px: 2.5,
+                py: 1.8,
+                background: (theme) =>
+                  `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.secondary.light} 100%)`,
+                borderBottom: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.15)}`
+              }}
+            >
+              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Stack direction="row" spacing={1.25} alignItems="center">
+                  <Box
+                    sx={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: 1.5,
+                      display: "grid",
+                      placeItems: "center",
+                      background: (theme) =>
+                        `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                      color: "#fff",
+                      flexShrink: 0
+                    }}
+                  >
+                    <HistoryEduRoundedIcon sx={{ fontSize: 16 }} />
+                  </Box>
+                  <Typography variant="subtitle2" fontWeight={800} sx={{ letterSpacing: 0.5 }}>
+                    CLINICAL NOTE PREVIEW
+                  </Typography>
+                </Stack>
+                <Chip
+                  size="small"
+                  label={
+                    noteReady
+                      ? `${confidenceValue}% Confidence`
+                      : consultStage === "processing"
+                        ? "Processing…"
+                        : "Awaiting audio"
+                  }
+                  color={noteReady ? "primary" : consultStage === "processing" ? "primary" : "default"}
+                  sx={{ fontWeight: 700 }}
+                />
+              </Stack>
+            </Box>
 
-            <Stack direction="row" sx={{ px: 2, py: 1, borderBottom: (theme) => `1px solid ${theme.palette.divider}` }} spacing={2.5}>
+            {/* SOAP tabs — pill style */}
+            <Stack
+              direction="row"
+              sx={{
+                px: 2,
+                py: 1.1,
+                borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                gap: 0.5,
+                flexWrap: "wrap"
+              }}
+            >
               {["Subjective", "Objective", "Assessment", "Plan"].map((tab, index) => (
-                <Typography
+                <Box
                   key={tab}
-                  variant="body2"
-                  fontWeight={index === 0 ? 700 : 600}
-                  color={index === 0 ? "primary.main" : "text.secondary"}
-                  sx={{ pb: 0.8, borderBottom: index === 0 ? "2px solid" : "none", borderColor: "primary.main" }}
+                  sx={{
+                    px: 1.25,
+                    py: 0.4,
+                    borderRadius: 999,
+                    cursor: "pointer",
+                    fontSize: "0.78rem",
+                    fontWeight: index === 0 ? 700 : 600,
+                    color: index === 0 ? "primary.main" : "text.secondary",
+                    backgroundColor: (theme) =>
+                      index === 0 ? alpha(theme.palette.primary.main, 0.1) : "transparent",
+                    border: (theme) =>
+                      index === 0
+                        ? `1px solid ${alpha(theme.palette.primary.main, 0.25)}`
+                        : "1px solid transparent",
+                    transition: "all 0.15s ease",
+                    "&:hover": {
+                      backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.06)
+                    }
+                  }}
                 >
                   {tab}
-                </Typography>
+                </Box>
               ))}
             </Stack>
 
-            <Box sx={{ p: 2, borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
-              <Typography variant="caption" color="text.secondary" fontWeight={800}>
-                HPI
-              </Typography>
-              {noteReady ? (
-                <Typography variant="body2" mt={1}>
-                  {selectedPatient.fullName}, {selectedPatient.age}-year-old {selectedPatient.gender.toLowerCase()}, presents
-                  with progressive dyspnea over 3-4 days. Rescue inhaler efficacy appears reduced and medication
-                  adherence concerns are noted.
-                </Typography>
-              ) : (
-                <Stack spacing={1} mt={1.2}>
-                  <Box sx={{ height: 10, borderRadius: 1, bgcolor: (theme) => alpha(theme.palette.text.primary, 0.09) }} />
-                  <Box sx={{ height: 10, borderRadius: 1, bgcolor: (theme) => alpha(theme.palette.text.primary, 0.09) }} />
-                  <Box sx={{ height: 10, width: "70%", borderRadius: 1, bgcolor: (theme) => alpha(theme.palette.text.primary, 0.09) }} />
+            {/* Scrollable note content */}
+            <Box sx={{ flex: 1, overflowY: "auto" }}>
+
+              {/* HPI */}
+              <Box sx={{ p: 2, borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                  <Box
+                    sx={{
+                      width: 4,
+                      height: 14,
+                      borderRadius: 999,
+                      backgroundColor: "primary.main",
+                      flexShrink: 0
+                    }}
+                  />
+                  <Typography variant="caption" fontWeight={800} color="text.secondary">
+                    HPI
+                  </Typography>
                 </Stack>
-              )}
-            </Box>
-
-            <Box sx={{ p: 2, borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
-              <Typography variant="caption" color="text.secondary" fontWeight={800}>
-                SUGGESTED ICD-10 CODES
-              </Typography>
-              <Stack spacing={1} mt={1.2}>
-                {[
-                  { code: "J44.1", label: "COPD with exacerbation", confidence: "98%" },
-                  { code: "I10", label: "Essential hypertension", confidence: "95%" },
-                  { code: "H53.9", label: "Visual disturbance, unspecified", confidence: "82%" }
-                ].map((item) => (
-                  <Stack
-                    key={item.code}
-                    direction="row"
-                    spacing={1}
-                    alignItems="center"
-                    sx={{ border: (theme) => `1px solid ${theme.palette.divider}`, borderRadius: 1.5, p: 1 }}
-                  >
-                    <Chip size="small" color="info" label={item.code} />
-                    <Box>
-                      <Typography variant="body2" fontWeight={600}>
-                        {item.label}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {item.confidence} confidence
-                      </Typography>
-                    </Box>
+                {noteReady ? (
+                  <Typography variant="body2" lineHeight={1.7}>
+                    {selectedPatient.fullName},{" "}
+                    {selectedPatient.age}-year-old{" "}
+                    {selectedPatient.gender.toLowerCase()}, presents with progressive
+                    dyspnea over 3–4 days. Rescue inhaler efficacy appears reduced and
+                    medication adherence concerns are noted.
+                  </Typography>
+                ) : (
+                  <Stack spacing={0.9} mt={0.5}>
+                    <Box sx={{ height: 9, borderRadius: 1, bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08) }} />
+                    <Box sx={{ height: 9, borderRadius: 1, bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08) }} />
+                    <Box sx={{ height: 9, width: "68%", borderRadius: 1, bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08) }} />
                   </Stack>
-                ))}
-              </Stack>
+                )}
+              </Box>
+
+              {/* ICD-10 codes */}
+              <Box sx={{ p: 2, borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.25 }}>
+                  <Box
+                    sx={{
+                      width: 4,
+                      height: 14,
+                      borderRadius: 999,
+                      backgroundColor: "info.main",
+                      flexShrink: 0
+                    }}
+                  />
+                  <Typography variant="caption" fontWeight={800} color="text.secondary">
+                    SUGGESTED ICD-10 CODES
+                  </Typography>
+                </Stack>
+                <Stack spacing={1}>
+                  {[
+                    { code: "J44.1", label: "COPD with exacerbation",          confidence: 98, color: "success" as const },
+                    { code: "I10",   label: "Essential hypertension",           confidence: 95, color: "primary" as const },
+                    { code: "H53.9", label: "Visual disturbance, unspecified",  confidence: 82, color: "info"    as const }
+                  ].map((item) => (
+                    <Box
+                      key={item.code}
+                      sx={{
+                        border: (theme) => `1px solid ${theme.palette.divider}`,
+                        borderLeft: (theme) => `3px solid ${theme.palette[item.color].main}`,
+                        borderRadius: 1.5,
+                        p: 1.25
+                      }}
+                    >
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Chip
+                            size="small"
+                            color={item.color}
+                            label={item.code}
+                            sx={{ fontWeight: 700, fontSize: "0.7rem" }}
+                          />
+                          <Typography variant="body2" fontWeight={600}>
+                            {item.label}
+                          </Typography>
+                        </Stack>
+                        <Typography
+                          variant="caption"
+                          fontWeight={800}
+                          sx={{ color: (theme) => theme.palette[item.color].main }}
+                        >
+                          {item.confidence}%
+                        </Typography>
+                      </Stack>
+                    </Box>
+                  ))}
+                </Stack>
+              </Box>
+
+              {/* Medications */}
+              <Box sx={{ p: 2 }}>
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.25 }}>
+                  <Box
+                    sx={{
+                      width: 4,
+                      height: 14,
+                      borderRadius: 999,
+                      backgroundColor: "warning.main",
+                      flexShrink: 0
+                    }}
+                  />
+                  <Typography variant="caption" fontWeight={800} color="text.secondary">
+                    MEDICATIONS MENTIONED
+                  </Typography>
+                </Stack>
+                <Stack spacing={1}>
+                  {[
+                    { name: "Hydrochlorothiazide", note: "Current – compliance issue noted", type: "warning" as const },
+                    { name: "Prednisolone 40mg",   note: "New – 5-day course",               type: "success" as const }
+                  ].map((med) => (
+                    <Box
+                      key={med.name}
+                      sx={{
+                        border: (theme) => `1px solid ${theme.palette.divider}`,
+                        borderLeft: (theme) => `3px solid ${theme.palette[med.type].main}`,
+                        borderRadius: 1.5,
+                        p: 1.25
+                      }}
+                    >
+                      <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                        <Box>
+                          <Typography variant="body2" fontWeight={700}>{med.name}</Typography>
+                          <Typography variant="caption" color="text.secondary">{med.note}</Typography>
+                        </Box>
+                        <Chip
+                          size="small"
+                          label={med.type === "warning" ? "Current" : "New"}
+                          color={med.type}
+                          sx={{ height: 20, fontSize: "0.65rem", fontWeight: 700, flexShrink: 0 }}
+                        />
+                      </Stack>
+                    </Box>
+                  ))}
+                </Stack>
+              </Box>
+
             </Box>
 
-            <Box sx={{ p: 2, borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
-              <Typography variant="caption" color="text.secondary" fontWeight={800}>
-                MEDICATIONS MENTIONED
-              </Typography>
-              <Stack spacing={1} mt={1.2}>
-                <Box sx={{ border: (theme) => `1px solid ${theme.palette.divider}`, borderRadius: 1.5, p: 1.2 }}>
-                  <Typography variant="body2" fontWeight={700}>
-                    Hydrochlorothiazide
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Current - compliance issue noted
-                  </Typography>
-                </Box>
-                <Box sx={{ border: (theme) => `1px solid ${theme.palette.divider}`, borderRadius: 1.5, p: 1.2 }}>
-                  <Typography variant="body2" fontWeight={700}>
-                    Prednisolone 40mg
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    New - 5-day course
-                  </Typography>
-                </Box>
-              </Stack>
-            </Box>
-
-            <Box sx={{ p: 2 }}>
+            {/* Review & Sign Off */}
+            <Box
+              sx={{
+                p: 2,
+                borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+                backgroundColor: (theme) =>
+                  noteReady ? alpha(theme.palette.primary.main, 0.02) : "background.paper"
+              }}
+            >
               <AppButton
-                intent="success"
+                intent="primary"
                 size="large"
-                disabled={!noteReady}
+                disabled={!noteReady || signingOff}
+                loading={signingOff}
                 fullWidth
+                startIcon={<TaskAltRoundedIcon />}
+                onClick={handleSignOff}
               >
                 Review &amp; Sign Off
               </AppButton>
             </Box>
-          </RightConsultCard>
-        </ConsultationGrid>
+          </Box>
+
+        </Box>
       ) : null}
 
       <input

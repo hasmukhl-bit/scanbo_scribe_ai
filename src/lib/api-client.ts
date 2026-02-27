@@ -59,3 +59,51 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
   setDb(db);
   return clone(newItem);
 }
+
+export async function apiPatch<T>(
+  path: string,
+  id: number,
+  patch: Partial<Record<string, unknown>>
+): Promise<T> {
+  const db = getDb();
+  const key = normalizePath(path) as keyof DbShape;
+  const collection = db[key];
+
+  if (!Array.isArray(collection)) {
+    throw new Error(`Collection ${String(key)} is not patchable`);
+  }
+
+  const idx = collection.findIndex(
+    (item) => (item as Record<string, unknown>).id === id
+  );
+  if (idx === -1) throw new Error(`Item with id=${id} not found`);
+
+  const updated = { ...(collection[idx] as Record<string, unknown>), ...patch };
+  (collection as Record<string, unknown>[])[idx] = updated;
+  setDb(db);
+  return clone(updated) as T;
+}
+
+export async function apiDelete(path: string, id: number): Promise<void> {
+  const db = getDb();
+  const key = normalizePath(path) as keyof DbShape;
+  const collection = db[key];
+
+  if (!Array.isArray(collection)) {
+    throw new Error(`Collection ${String(key)} is not deletable`);
+  }
+
+  const idx = collection.findIndex(
+    (item) => (item as Record<string, unknown>).id === id
+  );
+  if (idx !== -1) {
+    collection.splice(idx, 1);
+    setDb(db);
+  }
+}
+
+/** Force-reset localStorage to the current seed (useful during dev) */
+export function resetDb() {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(DB_KEY, JSON.stringify(clone(seedDb)));
+}

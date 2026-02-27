@@ -9,9 +9,6 @@ import {
   Checkbox,
   Chip,
   CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
   Divider,
   FormControlLabel,
   InputAdornment,
@@ -21,11 +18,14 @@ import {
   Stack,
   TextField,
   Toolbar,
+  Tooltip,
   Typography
 } from "@mui/material";
 import AppButton from "@/components/ui/AppButton";
+import AppDialog from "@/components/ui/AppDialog";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import MicNoneOutlinedIcon from "@mui/icons-material/MicNoneOutlined";
+import MicRoundedIcon from "@mui/icons-material/MicRounded";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import GridViewIcon from "@mui/icons-material/GridView";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
@@ -36,18 +36,22 @@ import AddIcon from "@mui/icons-material/Add";
 import SupportAgentOutlinedIcon from "@mui/icons-material/SupportAgentOutlined";
 import IosShareOutlinedIcon from "@mui/icons-material/IosShareOutlined";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
-import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
+import PersonSearchRoundedIcon from "@mui/icons-material/PersonSearchRounded";
+import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
+import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { apiGet, apiPost } from "@/lib/api-client";
 import type { Patient } from "@/lib/types";
-
+import { ConsultDialogContext } from "@/context/ConsultDialogContext";
 const PageRoot = styled("main")(() => ({
   width: "100%",
   height: "100vh",
@@ -223,15 +227,26 @@ const CollapsedIconButton = styled(IconButton)(() => ({
 const IconTile = styled(Box, {
   shouldForwardProp: (prop) => prop !== "active" && prop !== "tone"
 })<{ active?: boolean; tone: "primary" | "secondary" | "info" | "success" }>(
-  ({ theme, active, tone }) => ({
+  ({ theme, active }) => ({
     width: 40,
     height: 40,
     borderRadius: 12,
     display: "grid",
     placeItems: "center",
-    color: theme.palette[tone].main,
-    backgroundColor: active ? alpha(theme.palette[tone].main, 0.16) : "transparent",
-    border: `1px solid ${alpha(theme.palette[tone].main, 0.2)}`
+    transition: "all 0.18s ease",
+    color: active ? "#fff" : theme.palette.text.secondary,
+    backgroundColor: active
+      ? theme.palette.primary.main
+      : alpha(theme.palette.primary.main, 0.06),
+    border: `1px solid ${active ? "transparent" : alpha(theme.palette.primary.main, 0.12)}`,
+    boxShadow: active ? `0 3px 10px ${alpha(theme.palette.primary.main, 0.32)}` : "none",
+    "&:hover": {
+      backgroundColor: active
+        ? theme.palette.primary.dark
+        : alpha(theme.palette.primary.main, 0.12),
+      color: active ? "#fff" : theme.palette.primary.main,
+      transform: "scale(1.06)"
+    }
   })
 );
 
@@ -253,23 +268,25 @@ const MainColumn = styled(Box)(() => ({
 }));
 
 const HeaderBar = styled(AppBar)(({ theme }) => ({
-  borderBottom: `1px solid ${theme.palette.divider}`,
+  borderBottom: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
   top: 0,
   zIndex: theme.zIndex.appBar,
-  backdropFilter: "blur(8px)",
-  backgroundColor: alpha(theme.palette.background.paper, 0.9)
+  backdropFilter: "blur(12px)",
+  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.55)} 0%, ${alpha(theme.palette.background.paper, 1)} 55%)`,
+  boxShadow: `0 1px 0 ${alpha(theme.palette.primary.main, 0.08)}, 0 2px 8px ${alpha(theme.palette.primary.main, 0.04)}`
 }));
 
 const HeaderToolbar = styled(Toolbar)(({ theme }) => ({
-  minHeight: 72,
+  minHeight: 60,
   justifyContent: "space-between",
   gap: theme.spacing(2),
-  backgroundColor: theme.palette.background.paper
+  backgroundColor: "transparent"
 }));
 
-const HeaderTitle = styled(Typography)(() => ({
-  fontWeight: 700,
-  color: "#111111"
+const HeaderTitle = styled(Typography)(({ theme }) => ({
+  fontWeight: 800,
+  color: theme.palette.text.primary,
+  letterSpacing: "-0.01em"
 }));
 
 const HeaderRight = styled(Stack)(() => ({
@@ -280,14 +297,17 @@ const HeaderRight = styled(Stack)(() => ({
 
 const TranscriptionChip = styled(Chip)(({ theme }) => ({
   borderRadius: 999,
-  backgroundColor: alpha(theme.palette.primary.main, 0.1),
-  border: "none",
+  backgroundColor: alpha(theme.palette.primary.main, 0.08),
+  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
   color: theme.palette.primary.main,
-  fontWeight: 600,
-  paddingLeft: theme.spacing(0.75),
-  paddingRight: theme.spacing(0.75)
+  fontWeight: 700,
+  height: 40,
+  paddingLeft: theme.spacing(0.5),
+  paddingRight: theme.spacing(1.25),
+  boxShadow: `0 1px 4px ${alpha(theme.palette.primary.main, 0.1)}`,
+  "& .MuiChip-label": { fontSize: "0.875rem" },
+  "& .MuiChip-icon": { color: theme.palette.primary.main, marginLeft: theme.spacing(0.5) }
 }));
-
 
 const UserButton = styled(Button)(({ theme }) => ({
   textTransform: "none",
@@ -296,27 +316,38 @@ const UserButton = styled(Button)(({ theme }) => ({
   alignItems: "center",
   gap: 8,
   borderRadius: 999,
-  padding: theme.spacing(0.5, 1),
-  border: "none",
-  backgroundColor: "transparent"
+  padding: theme.spacing(0, 1.5, 0, 0.75),
+  minHeight: 40,
+  border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
+  backgroundColor: alpha(theme.palette.background.paper, 0.9),
+  boxShadow: `0 1px 4px ${alpha(theme.palette.primary.main, 0.08)}`,
+  transition: "all 0.18s ease",
+  "&:hover": {
+    backgroundColor: alpha(theme.palette.primary.main, 0.04),
+    borderColor: alpha(theme.palette.primary.main, 0.28),
+    boxShadow: `0 2px 8px ${alpha(theme.palette.primary.main, 0.12)}`
+  }
 }));
 
 const UserAvatar = styled(Box)(({ theme }) => ({
-  width: 28,
-  height: 28,
+  width: 32,
+  height: 32,
   borderRadius: "50%",
-  backgroundColor: theme.palette.primary.main,
+  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
   color: theme.palette.primary.contrastText,
   display: "grid",
-  placeItems: "center"
+  placeItems: "center",
+  fontWeight: 700,
+  fontSize: "0.75rem",
+  boxShadow: `0 2px 6px ${alpha(theme.palette.primary.main, 0.35)}`
 }));
 
 const MenuHeaderAvatar = styled(Box)(({ theme }) => ({
   width: 64,
   height: 64,
   borderRadius: "50%",
-  background: "linear-gradient(135deg, #2f8ce7 0%, #1f71bd 100%)",
-  border: `4px solid ${alpha("#9ed0ff", 0.95)}`,
+  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+  border: `4px solid ${alpha(theme.palette.primary.light, 0.9)}`,
   color: "#fff",
   display: "grid",
   placeItems: "center",
@@ -426,6 +457,7 @@ export default function AppShell({ title, subtitle, children, active }: AppShell
   const router = useRouter();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [loggingOut, setLoggingOut] = React.useState(false);
+  const [navigatingTo, setNavigatingTo] = React.useState<string | null>(null);
   const [startConsultOpen, setStartConsultOpen] = React.useState(false);
   const [patientsLoading, setPatientsLoading] = React.useState(false);
   const [patients, setPatients] = React.useState<Patient[]>([]);
@@ -457,8 +489,13 @@ export default function AppShell({ title, subtitle, children, active }: AppShell
   };
 
   const handleNavigate = (path: string) => {
-    handleMenuClose();
-    router.push(path);
+    if (navigatingTo) return;
+    setNavigatingTo(path);
+    window.setTimeout(() => {
+      setNavigatingTo(null);
+      handleMenuClose();
+      router.push(path);
+    }, 600);
   };
 
   const handleLogout = async () => {
@@ -554,7 +591,7 @@ export default function AppShell({ title, subtitle, children, active }: AppShell
       if (selectedMode === "record") {
         params.set("autostart", "1");
       }
-      router.push(`/start-consult?${params.toString()}`);
+      router.push(`/consultation?${params.toString()}`);
     }, 1700);
   };
 
@@ -589,8 +626,8 @@ export default function AppShell({ title, subtitle, children, active }: AppShell
           {sidebarOpen ? (
             <SidebarContent spacing={2}>
               <SidebarActions>
-                <AppButton intent="primary" onClick={openStartConsultDialog}>
-                  + Start Consult
+                <AppButton intent="primary" startIcon={<MicRoundedIcon />} onClick={openStartConsultDialog}>
+                  Start Consult
                 </AppButton>
               </SidebarActions>
 
@@ -655,68 +692,123 @@ export default function AppShell({ title, subtitle, children, active }: AppShell
           ) : (
             <SidebarContent sx={{ justifyContent: "space-between", height: "100%" }}>
               <CollapsedIconStack>
+                {/* New Consult CTA */}
                 <CollapsedActionStack>
-                  <CollapsedIconButton>
-                    <IconLink
-                      href="/start-consult"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        void openStartConsultDialog();
-                      }}
-                    >
-                      <IconTile active tone="primary">
-                        <AddIcon fontSize="small" />
-                      </IconTile>
-                    </IconLink>
-                  </CollapsedIconButton>
+                  <Tooltip title="New Consult" placement="right" arrow>
+                    <CollapsedIconButton>
+                      <IconLink
+                        href="#"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          void openStartConsultDialog();
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 12,
+                            display: "grid",
+                            placeItems: "center",
+                            background: (theme) =>
+                              `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
+                            color: "#fff",
+                            boxShadow: (theme) => `0 4px 12px ${alpha(theme.palette.primary.main, 0.38)}`,
+                            transition: "all 0.18s ease",
+                            "&:hover": {
+                              transform: "scale(1.08)",
+                              boxShadow: (theme) => `0 6px 16px ${alpha(theme.palette.primary.main, 0.48)}`
+                            }
+                          }}
+                        >
+                          <MicRoundedIcon fontSize="small" />
+                        </Box>
+                      </IconLink>
+                    </CollapsedIconButton>
+                  </Tooltip>
                 </CollapsedActionStack>
 
-                <CollapsedIconButton>
-                  <IconLink href="/dashboard">
-                    <IconTile active={active === "dashboard"} tone="primary">
-                      <GridViewIcon fontSize="small" />
-                    </IconTile>
-                  </IconLink>
-                </CollapsedIconButton>
-                <CollapsedIconButton>
-                  <IconLink href="/my-recordings">
-                    <IconTile active={active === "home"} tone="primary">
-                      <DescriptionOutlinedIcon fontSize="small" />
-                    </IconTile>
-                  </IconLink>
-                </CollapsedIconButton>
-                <CollapsedIconButton>
-                  <IconLink href="/patients">
-                    <IconTile active={active === "patients"} tone="secondary">
-                      <PersonOutlineOutlinedIcon fontSize="small" />
-                    </IconTile>
-                  </IconLink>
-                </CollapsedIconButton>
+                {/* Divider */}
+                <Box
+                  sx={{
+                    width: 28,
+                    height: 1,
+                    borderRadius: 999,
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.15)
+                  }}
+                />
+
+                {/* Main nav */}
+                <Tooltip title="Dashboard" placement="right" arrow>
+                  <CollapsedIconButton>
+                    <IconLink href="/dashboard">
+                      <IconTile active={active === "dashboard"} tone="primary">
+                        <GridViewIcon fontSize="small" />
+                      </IconTile>
+                    </IconLink>
+                  </CollapsedIconButton>
+                </Tooltip>
+                <Tooltip title="My Recordings" placement="right" arrow>
+                  <CollapsedIconButton>
+                    <IconLink href="/my-recordings">
+                      <IconTile active={active === "home"} tone="primary">
+                        <DescriptionOutlinedIcon fontSize="small" />
+                      </IconTile>
+                    </IconLink>
+                  </CollapsedIconButton>
+                </Tooltip>
+                <Tooltip title="Patients" placement="right" arrow>
+                  <CollapsedIconButton>
+                    <IconLink href="/patients">
+                      <IconTile active={active === "patients"} tone="primary">
+                        <PersonOutlineOutlinedIcon fontSize="small" />
+                      </IconTile>
+                    </IconLink>
+                  </CollapsedIconButton>
+                </Tooltip>
               </CollapsedIconStack>
-              <SidebarFooter sx={{ pb: 1 }}>
+
+              <SidebarFooter sx={{ pb: 1.5 }}>
                 <Stack spacing={1.25} alignItems="center">
-                  <CollapsedIconButton>
-                    <IconLink href="/settings">
-                      <IconTile active={active === "settings"} tone="info">
-                        <SettingsOutlinedIcon fontSize="small" />
-                      </IconTile>
-                    </IconLink>
-                  </CollapsedIconButton>
-                  <CollapsedIconButton>
-                    <IconLink href="/credits">
-                      <IconTile active={active === "credits"} tone="secondary">
-                        <CreditCardOutlinedIcon fontSize="small" />
-                      </IconTile>
-                    </IconLink>
-                  </CollapsedIconButton>
-                  <CollapsedIconButton>
-                    <IconLink href="/support">
-                      <IconTile active={active === "support"} tone="primary">
-                        <HelpOutlineOutlinedIcon fontSize="small" />
-                      </IconTile>
-                    </IconLink>
-                  </CollapsedIconButton>
-                  <CollapsedUpgradeButton>Pro</CollapsedUpgradeButton>
+                  {/* Divider */}
+                  <Box
+                    sx={{
+                      width: 28,
+                      height: 1,
+                      borderRadius: 999,
+                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.15)
+                    }}
+                  />
+                  <Tooltip title="Settings" placement="right" arrow>
+                    <CollapsedIconButton>
+                      <IconLink href="/settings">
+                        <IconTile active={active === "settings"} tone="primary">
+                          <SettingsOutlinedIcon fontSize="small" />
+                        </IconTile>
+                      </IconLink>
+                    </CollapsedIconButton>
+                  </Tooltip>
+                  <Tooltip title="Credits & Usage" placement="right" arrow>
+                    <CollapsedIconButton>
+                      <IconLink href="/credits">
+                        <IconTile active={active === "credits"} tone="primary">
+                          <CreditCardOutlinedIcon fontSize="small" />
+                        </IconTile>
+                      </IconLink>
+                    </CollapsedIconButton>
+                  </Tooltip>
+                  <Tooltip title="Help & Support" placement="right" arrow>
+                    <CollapsedIconButton>
+                      <IconLink href="/support">
+                        <IconTile active={active === "support"} tone="primary">
+                          <HelpOutlineOutlinedIcon fontSize="small" />
+                        </IconTile>
+                      </IconLink>
+                    </CollapsedIconButton>
+                  </Tooltip>
+                  <Tooltip title="Upgrade to Pro" placement="right" arrow>
+                    <CollapsedUpgradeButton>Pro</CollapsedUpgradeButton>
+                  </Tooltip>
                 </Stack>
               </SidebarFooter>
             </SidebarContent>
@@ -730,14 +822,13 @@ export default function AppShell({ title, subtitle, children, active }: AppShell
 
               <HeaderRight>
                 <TranscriptionChip
-                  label={<BoldText variant="body2">Recordings Left: 20</BoldText>}
+                  icon={<MicRoundedIcon sx={{ fontSize: "16px !important" }} />}
+                  label={<BoldText variant="body2">20 Recordings Left</BoldText>}
                 />
                 <UserButton onClick={handleMenuOpen}>
-                  <UserAvatar>
-                    <PersonOutlineOutlinedIcon fontSize="small" />
-                  </UserAvatar>
-                  <BoldText variant="body2">Hasmukh Lohar</BoldText>
-                  <ExpandMoreIcon fontSize="small" />
+                  <UserAvatar>HL</UserAvatar>
+                  <BoldText variant="body2">Dr. Lohar</BoldText>
+                  <ExpandMoreIcon fontSize="small" sx={{ color: "text.secondary", fontSize: 18 }} />
                 </UserButton>
                 <Menu
                   anchorEl={anchorEl}
@@ -762,8 +853,9 @@ export default function AppShell({ title, subtitle, children, active }: AppShell
                       px: 2,
                       py: 1.8,
                       color: "text.primary",
-                      background: "linear-gradient(135deg, #eef5ff 0%, #deecff 100%)",
-                      borderBottom: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.18)}`,
+                      background: (theme) =>
+                        `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.6)} 0%, ${alpha(theme.palette.secondary.light, 0.4)} 100%)`,
+                      borderBottom: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.14)}`,
                       position: "relative",
                       overflow: "hidden"
                     }}
@@ -776,7 +868,8 @@ export default function AppShell({ title, subtitle, children, active }: AppShell
                         width: 180,
                         height: 180,
                         borderRadius: "50%",
-                        backgroundColor: "rgba(66, 150, 232, 0.14)"
+                        backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.07),
+                        pointerEvents: "none"
                       }}
                     />
                     <MenuHeaderAvatar>
@@ -789,74 +882,169 @@ export default function AppShell({ title, subtitle, children, active }: AppShell
                           width: 16,
                           height: 16,
                           borderRadius: "50%",
-                          border: "3px solid #deecff",
-                          backgroundColor: "#10b981"
+                          border: (theme) => `3px solid ${alpha(theme.palette.primary.light, 0.9)}`,
+                          backgroundColor: "success.main",
+                          bgcolor: "success.main"
                         }}
                       />
                     </MenuHeaderAvatar>
-                    <Typography variant="h6" fontWeight={800} sx={{ mt: 1 }}>
+                    <Typography variant="h6" fontWeight={800} sx={{ mt: 1 }} color="text.primary">
                       Dr. Hasmukh Lohar
                     </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.88 }}>
+                    <Typography variant="body2" color="text.secondary">
                       hasmukh@scanbo.ai
                     </Typography>
                     <Chip
-                      icon={<StarRoundedIcon sx={{ color: "#f59e0b !important" }} />}
-                      label="Pro Plan"
+                      label="✦ Pro Plan"
+                      size="small"
                       sx={{
                         mt: 1,
                         borderRadius: 999,
-                        fontWeight: 700,
-                        color: "#f59e0b",
-                        backgroundColor: "rgba(245, 158, 11, 0.16)",
-                        border: "1px solid rgba(245, 158, 11, 0.35)"
+                        fontWeight: 800,
+                        fontSize: "0.75rem",
+                        color: (theme) => theme.palette.primary.main,
+                        backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                        border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.25)}`,
+                        "& .MuiChip-label": { px: 1.25 }
                       }}
                     />
                   </Box>
 
                   <Stack sx={{ p: 1 }}>
-                    <MenuItem onClick={() => handleNavigate("/profile")} sx={{ borderRadius: 2, py: 0.9, minHeight: 0, gap: 1.1 }}>
-                      <PersonOutlineOutlinedIcon color="action" />
-                      <Typography fontWeight={700}>My Profile</Typography>
-                    </MenuItem>
-                    <MenuItem onClick={() => handleNavigate("/settings")} sx={{ borderRadius: 2, py: 0.9, minHeight: 0, gap: 1.1 }}>
-                      <SettingsOutlinedIcon color="action" />
-                      <Typography fontWeight={700}>Settings</Typography>
-                    </MenuItem>
-                    <MenuItem onClick={() => handleNavigate("/credits")} sx={{ borderRadius: 2, py: 0.9, minHeight: 0, gap: 1.1 }}>
-                      <CreditCardOutlinedIcon color="action" />
-                      <Typography fontWeight={700} sx={{ flex: 1 }}>Credits & Usage</Typography>
-                      <Chip size="small" label="20 left" sx={{ borderRadius: 999, fontWeight: 700, bgcolor: (theme) => alpha(theme.palette.primary.main, 0.16), color: "primary.main" }} />
-                    </MenuItem>
-                    <MenuItem onClick={() => handleNavigate("/my-recordings")} sx={{ borderRadius: 2, py: 0.9, minHeight: 0, gap: 1.1 }}>
-                      <DescriptionOutlinedIcon color="action" />
-                      <Typography fontWeight={700} sx={{ flex: 1 }}>My Notes</Typography>
-                      <Chip size="small" label="9 pending" sx={{ borderRadius: 999, fontWeight: 700, bgcolor: (theme) => alpha(theme.palette.error.main, 0.14), color: "error.main" }} />
-                    </MenuItem>
+                    {[
+                      { path: "/profile",       label: "My Profile",      icon: <PersonOutlineOutlinedIcon sx={{ fontSize: 17 }} />,  badge: null },
+                      { path: "/settings",      label: "Settings",        icon: <SettingsOutlinedIcon sx={{ fontSize: 17 }} />,       badge: null },
+                      { path: "/credits",       label: "Credits & Usage", icon: <CreditCardOutlinedIcon sx={{ fontSize: 17 }} />,     badge: { label: "20 left" } },
+                      { path: "/my-recordings", label: "My Notes",        icon: <DescriptionOutlinedIcon sx={{ fontSize: 17 }} />,    badge: { label: "9 pending" } },
+                    ].map((item) => {
+                      const isLoading = navigatingTo === item.path;
+                      const isDisabled = !!navigatingTo && !isLoading;
+                      return (
+                        <MenuItem
+                          key={item.path}
+                          onClick={() => handleNavigate(item.path)}
+                          disabled={isDisabled}
+                          sx={{
+                            borderRadius: 2, py: 0.9, minHeight: 0, gap: 1.25,
+                            opacity: isDisabled ? 0.45 : 1,
+                            transition: "opacity 0.2s ease",
+                            bgcolor: isLoading ? (theme) => alpha(theme.palette.primary.main, 0.06) : "transparent",
+                            "&:hover": { bgcolor: (theme) => alpha(theme.palette.primary.main, 0.06) }
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: 30, height: 30, borderRadius: 1.5,
+                              display: "grid", placeItems: "center",
+                              flexShrink: 0, transition: "all 0.2s ease",
+                              bgcolor: isLoading
+                                ? (theme) => alpha(theme.palette.primary.main, 0.15)
+                                : (theme) => alpha(theme.palette.primary.main, 0.08),
+                              color: "primary.main",
+                              border: isLoading
+                                ? (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.3)}`
+                                : "1px solid transparent"
+                            }}
+                          >
+                            {isLoading
+                              ? <CircularProgress size={14} thickness={5} sx={{ color: "primary.main" }} />
+                              : item.icon
+                            }
+                          </Box>
+                          <Typography
+                            fontWeight={isLoading ? 800 : 700}
+                            color={isLoading ? "primary.main" : "text.primary"}
+                            sx={{ flex: 1, transition: "color 0.2s ease" }}
+                          >
+                            {item.label}
+                          </Typography>
+                          {item.badge && !isLoading && (
+                            <Chip
+                              size="small"
+                              label={item.badge.label}
+                              sx={{
+                                borderRadius: 999, fontWeight: 700, fontSize: "0.68rem",
+                                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                                color: "primary.main",
+                                border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                                "& .MuiChip-label": { px: 1 }
+                              }}
+                            />
+                          )}
+                        </MenuItem>
+                      );
+                    })}
                     <Divider sx={{ my: 1 }} />
-                    <MenuItem onClick={() => handleNavigate("/support")} sx={{ borderRadius: 2, py: 0.9, minHeight: 0, gap: 1.1 }}>
-                      <HelpOutlineOutlinedIcon color="action" />
-                      <Typography fontWeight={700}>Help & Support</Typography>
-                    </MenuItem>
-                    <MenuItem sx={{ borderRadius: 2, py: 0.9, minHeight: 0, gap: 1.1 }}>
-                      <IosShareOutlinedIcon color="action" />
-                      <Typography fontWeight={700}>Invite Colleague</Typography>
-                    </MenuItem>
+                    {[
+                      { path: "/support",  label: "Help & Support",   icon: <HelpOutlineOutlinedIcon sx={{ fontSize: 17 }} /> },
+                      { path: "#invite",   label: "Invite Colleague",  icon: <IosShareOutlinedIcon sx={{ fontSize: 17 }} /> },
+                    ].map((item) => {
+                      const isLoading = navigatingTo === item.path;
+                      const isDisabled = !!navigatingTo && !isLoading;
+                      const handleClick = () => {
+                        if (item.path !== "#invite") {
+                          handleNavigate(item.path);
+                        }
+                      };
+                      return (
+                        <MenuItem
+                          key={item.path}
+                          onClick={handleClick}
+                          disabled={isDisabled}
+                          sx={{
+                            borderRadius: 2, py: 0.9, minHeight: 0, gap: 1.25,
+                            opacity: isDisabled ? 0.45 : 1,
+                            transition: "opacity 0.2s ease",
+                            bgcolor: isLoading ? (theme) => alpha(theme.palette.primary.main, 0.06) : "transparent",
+                            "&:hover": { bgcolor: (theme) => alpha(theme.palette.primary.main, 0.06) }
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: 30, height: 30, borderRadius: 1.5,
+                              display: "grid", placeItems: "center",
+                              flexShrink: 0, transition: "all 0.2s ease",
+                              bgcolor: isLoading
+                                ? (theme) => alpha(theme.palette.primary.main, 0.15)
+                                : (theme) => alpha(theme.palette.primary.main, 0.08),
+                              color: "primary.main",
+                              border: isLoading
+                                ? (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.3)}`
+                                : "1px solid transparent"
+                            }}
+                          >
+                            {isLoading
+                              ? <CircularProgress size={14} thickness={5} sx={{ color: "primary.main" }} />
+                              : item.icon
+                            }
+                          </Box>
+                          <Typography
+                            fontWeight={isLoading ? 800 : 700}
+                            color={isLoading ? "primary.main" : "text.primary"}
+                            sx={{ flex: 1, transition: "color 0.2s ease" }}
+                          >
+                            {item.label}
+                          </Typography>
+                        </MenuItem>
+                      );
+                    })}
                     <Divider sx={{ my: 1 }} />
                     <MenuItem
                       onClick={handleLogout}
                       disabled={loggingOut}
-                      sx={{ borderRadius: 2, py: 0.9, minHeight: 0, gap: 1.1, color: "error.main" }}
+                      sx={{ borderRadius: 2, py: 0.9, minHeight: 0, gap: 1.25, "&:hover": { bgcolor: (theme) => alpha(theme.palette.error.main, 0.06) } }}
                     >
                       {loggingOut ? (
                         <Stack direction="row" spacing={1} alignItems="center">
-                          <CircularProgress size={16} />
-                          <span>Signing out...</span>
+                          <CircularProgress size={16} color="error" />
+                          <Typography fontWeight={700} color="error.main">Signing out...</Typography>
                         </Stack>
                       ) : (
                         <>
-                          <LogoutRoundedIcon />
-                          <Typography fontWeight={700}>Sign Out</Typography>
+                          <Box sx={{ width: 30, height: 30, borderRadius: 1.5, display: "grid", placeItems: "center", bgcolor: (theme) => alpha(theme.palette.error.main, 0.08), color: "error.main", flexShrink: 0 }}>
+                            <LogoutRoundedIcon sx={{ fontSize: 17 }} />
+                          </Box>
+                          <Typography fontWeight={700} color="error.main">Sign Out</Typography>
                         </>
                       )}
                     </MenuItem>
@@ -867,160 +1055,342 @@ export default function AppShell({ title, subtitle, children, active }: AppShell
           </HeaderBar>
 
           <ContentArea>
-            <ContentCard>{children}</ContentCard>
+            <ConsultDialogContext.Provider value={{ openStartConsultDialog }}>
+              <ContentCard>{children}</ContentCard>
+            </ConsultDialogContext.Provider>
           </ContentArea>
         </MainColumn>
       </PageLayout>
 
-      <Dialog
+      <AppDialog
         open={startConsultOpen}
         onClose={closeStartConsultDialog}
-        fullWidth
         maxWidth="sm"
-        PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}
+        noPadding
+        title={
+          modalStep === "create"
+            ? "Create New Patient"
+            : modalStep === "mode"
+              ? "Start Scribe"
+              : modalStep === "processing"
+                ? "Setting up your scribe"
+                : "Select Patient"
+        }
+        subtitle={
+          modalStep === "create"
+            ? "Add patient details to continue"
+            : modalStep === "mode"
+              ? "Choose how to capture this consultation"
+              : modalStep === "processing"
+                ? "Connecting AI transcription engine"
+                : "Search or create a new patient to begin"
+        }
+        icon={
+          modalStep === "create" ? (
+            <PersonAddRoundedIcon fontSize="small" />
+          ) : modalStep === "mode" ? (
+            <TuneRoundedIcon fontSize="small" />
+          ) : modalStep === "processing" ? (
+            <AutoAwesomeRoundedIcon fontSize="small" />
+          ) : (
+            <PersonSearchRoundedIcon fontSize="small" />
+          )
+        }
+        steps={
+          modalStep !== "processing"
+            ? [
+                {
+                  label: "1. Select Patient",
+                  status:
+                    modalStep === "select" || modalStep === "create"
+                      ? "active"
+                      : "completed"
+                },
+                {
+                  label: "2. Choose Mode",
+                  status: modalStep === "mode" ? "active" : "pending"
+                }
+              ]
+            : undefined
+        }
+        hideClose={modalStep === "processing"}
+        actions={
+          modalStep !== "processing" ? (
+            <>
+              {modalStep === "select" && (
+                <>
+                  <Stack direction="row" spacing={1.25} alignItems="center">
+                    <AppButton intent="neutral" onClick={closeStartConsultDialog}>
+                      Cancel
+                    </AppButton>
+                    {selectedPatient && (
+                      <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                        {selectedPatient.fullName} selected
+                      </Typography>
+                    )}
+                  </Stack>
+                  <Stack direction="row" spacing={1.25}>
+                    <AppButton
+                      intent="secondary"
+                      startIcon={<AddIcon />}
+                      onClick={() => setModalStep("create")}
+                    >
+                      Create Patient
+                    </AppButton>
+                    <AppButton
+                      intent="primary"
+                      endIcon={<ArrowForwardRoundedIcon />}
+                      onClick={handleContinueWithSelectedPatient}
+                      disabled={!selectedPatient}
+                    >
+                      Continue
+                    </AppButton>
+                  </Stack>
+                </>
+              )}
+              {modalStep === "create" && (
+                <>
+                  <AppButton intent="neutral" onClick={() => setModalStep("select")}>
+                    Back
+                  </AppButton>
+                  <AppButton
+                    intent="primary"
+                    endIcon={<ArrowForwardRoundedIcon />}
+                    onClick={handleCreatePatientAndContinue}
+                  >
+                    Create &amp; Continue
+                  </AppButton>
+                </>
+              )}
+              {modalStep === "mode" && (
+                <>
+                  <AppButton intent="neutral" onClick={() => setModalStep("select")}>
+                    Back
+                  </AppButton>
+                  <AppButton
+                    intent="primary"
+                    endIcon={<ArrowForwardRoundedIcon />}
+                    onClick={handleStartConsultFlow}
+                    disabled={!selectedMode}
+                  >
+                    {selectedMode === "upload" ? "Select File" : "Start Recording"}
+                  </AppButton>
+                </>
+              )}
+            </>
+          ) : undefined
+        }
       >
-        <DialogContent sx={{ p: 0 }}>
-          <Stack spacing={0}>
-            <Box sx={{ px: { xs: 2, sm: 3 }, pt: { xs: 2, sm: 2.5 }, pb: 1.25 }}>
-              <Stack direction="row" alignItems="flex-start" justifyContent="space-between">
-                <Box>
-                  <Typography variant="h5" fontWeight={700}>
-                    {modalStep === "create"
-                      ? "Create New Patient"
-                      : modalStep === "mode"
-                        ? "Start Scribe"
-                        : modalStep === "processing"
-                          ? "Setting up your scribe"
-                          : "Select Patient"}
-                  </Typography>
-                  <Typography variant="h6" color="text.secondary" fontWeight={500} sx={{ fontSize: "1.1rem" }}>
-                    {modalStep === "create"
-                      ? "Add patient details to continue"
-                      : modalStep === "mode"
-                        ? "Choose how to capture this consultation"
-                        : modalStep === "processing"
-                          ? "Connecting AI transcription engine"
-                          : "Search or create a new patient to begin"}
-                  </Typography>
-                </Box>
-                <IconButton
-                  onClick={closeStartConsultDialog}
-                >
-                  <CloseRoundedIcon />
-                </IconButton>
-              </Stack>
-            </Box>
 
-            {modalStep === "select" ? (
+            {/* ── SELECT PATIENT step ── */}
+            {modalStep === "select" && (
               <>
-                <TextField
-                  placeholder="Search by name, phone, Aadhaar or MRN"
-                  fullWidth
-                  value={patientQuery}
-                  onChange={(event) => setPatientQuery(event.target.value)}
-                  sx={{
-                    px: { xs: 2, sm: 3 },
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 2.5,
-                      backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.03)
-                    }
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchRoundedIcon color="action" />
-                      </InputAdornment>
-                    )
-                  }}
-                />
-                <Box sx={{ px: { xs: 2, sm: 3 }, py: 1.25 }}>
-                  <Stack spacing={0.9} sx={{ maxHeight: 280, overflowY: "auto", pr: 0.5 }}>
+                {/* Search bar */}
+                <Box sx={{ px: { xs: 2.5, sm: 3 }, pt: 2, pb: 0 }}>
+                  <TextField
+                    placeholder="Search by name, phone, Aadhaar or MRN"
+                    fullWidth
+                    value={patientQuery}
+                    onChange={(event) => setPatientQuery(event.target.value)}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 2.5,
+                        backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.03)
+                      }
+                    }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchRoundedIcon color="action" fontSize="small" />
+                        </InputAdornment>
+                      ),
+                      endAdornment: patientQuery ? (
+                        <InputAdornment position="end">
+                          <IconButton size="small" onClick={() => setPatientQuery("")} edge="end">
+                            <CloseRoundedIcon fontSize="small" />
+                          </IconButton>
+                        </InputAdornment>
+                      ) : null
+                    }}
+                  />
+                </Box>
+
+                {/* Result count */}
+                {!patientsLoading && filteredPatients.length > 0 && (
+                  <Box sx={{ px: { xs: 2.5, sm: 3 }, pt: 1, pb: 0 }}>
+                    <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                      {filteredPatients.length} patient{filteredPatients.length !== 1 ? "s" : ""} found
+                    </Typography>
+                  </Box>
+                )}
+
+                {/* Patient list */}
+                <Box sx={{ px: { xs: 2.5, sm: 3 }, pt: 1, pb: 1.5 }}>
+                  <Stack spacing={0.75} sx={{ maxHeight: 300, overflowY: "auto", pr: 0.5 }}>
                     {patientsLoading ? (
-                      <Typography variant="body2" color="text.secondary">
-                        Loading patients...
-                      </Typography>
+                      <Stack alignItems="center" justifyContent="center" spacing={1.5} sx={{ py: 4 }}>
+                        <CircularProgress size={28} thickness={3.5} />
+                        <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                          Loading patients...
+                        </Typography>
+                      </Stack>
                     ) : filteredPatients.length === 0 ? (
-                      <Typography variant="body2" color="text.secondary">
-                        No patient found. Create a new patient.
-                      </Typography>
-                    ) : (
-                      filteredPatients.map((patient) => (
+                      <Stack alignItems="center" justifyContent="center" spacing={0.75} sx={{ py: 4 }}>
                         <Box
-                          key={patient.id}
-                          onClick={() => setSelectedPatientId(patient.id)}
                           sx={{
-                            border: (theme) =>
-                              `2px solid ${
-                                selectedPatientId === patient.id ? theme.palette.primary.main : theme.palette.divider
-                              }`,
-                            borderRadius: 2.5,
-                            p: 1.75,
-                            backgroundColor: (theme) =>
-                              selectedPatientId === patient.id
-                                ? alpha(theme.palette.primary.main, 0.08)
-                                : theme.palette.background.paper,
-                            cursor: "pointer"
+                            width: 52,
+                            height: 52,
+                            borderRadius: "50%",
+                            display: "grid",
+                            placeItems: "center",
+                            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                            border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.18)}`
                           }}
                         >
-                          <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-                            <Stack direction="row" spacing={1.75} alignItems="center">
-                              <Box
-                                sx={{
-                                  width: 56,
-                                  height: 56,
-                                  borderRadius: "50%",
-                                  display: "grid",
-                                  placeItems: "center",
-                                  color: "#fff",
-                                  fontWeight: 700,
-                                  background: "linear-gradient(135deg, #3aa8f3 0%, #1f7bc7 100%)"
-                                }}
-                              >
-                                {patient.fullName
-                                  .split(" ")
-                                  .filter(Boolean)
-                                  .slice(0, 2)
-                                  .map((part) => part[0])
-                                  .join("")
-                                  .toUpperCase() || "PT"}
-                              </Box>
-                              <Box>
-                                <Typography variant="subtitle1" fontWeight={700}>
-                                  {patient.fullName}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                  {patient.age}Y • {patient.gender} • {patient.phone}
-                                </Typography>
-                              </Box>
-                            </Stack>
-                            {selectedPatientId === patient.id ? (
-                              <CheckCircleRoundedIcon color="primary" />
-                            ) : (
-                              <Box
-                                sx={{
-                                  width: 22,
-                                  height: 22,
-                                  borderRadius: "50%",
-                                  border: (theme) => `2px solid ${theme.palette.divider}`
-                                }}
-                              />
-                            )}
-                          </Stack>
+                          <PersonSearchRoundedIcon sx={{ fontSize: 26, color: "primary.main" }} />
                         </Box>
-                      ))
+                        <Typography variant="body2" fontWeight={700} color="text.secondary">
+                          No patients found
+                        </Typography>
+                        <Typography variant="caption" color="text.disabled" textAlign="center">
+                          {patientQuery ? "Try a different search term" : "Create a new patient to get started"}
+                        </Typography>
+                      </Stack>
+                    ) : (
+                      filteredPatients.map((patient) => {
+                        const isSelected = selectedPatientId === patient.id;
+                        const initials =
+                          patient.fullName
+                            .split(" ")
+                            .filter(Boolean)
+                            .slice(0, 2)
+                            .map((p) => p[0])
+                            .join("")
+                            .toUpperCase() || "PT";
+                        return (
+                          <Box
+                            key={patient.id}
+                            onClick={() => setSelectedPatientId(patient.id)}
+                            sx={{
+                              borderRadius: 2.5,
+                              p: 1.5,
+                              cursor: "pointer",
+                              border: (theme) =>
+                                `1.5px solid ${isSelected ? theme.palette.primary.main : theme.palette.divider}`,
+                              borderLeft: (theme) =>
+                                isSelected
+                                  ? `4px solid ${theme.palette.primary.main}`
+                                  : `1.5px solid ${theme.palette.divider}`,
+                              backgroundColor: (theme) =>
+                                isSelected
+                                  ? alpha(theme.palette.primary.main, 0.06)
+                                  : theme.palette.background.paper,
+                              transition: "all 0.15s ease",
+                              "&:hover": {
+                                borderColor: (theme) => alpha(theme.palette.primary.main, 0.5),
+                                borderLeftColor: "primary.main",
+                                backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.04),
+                                transform: "translateY(-1px)",
+                                boxShadow: (theme) =>
+                                  `0 4px 12px ${alpha(theme.palette.primary.main, 0.1)}`
+                              }
+                            }}
+                          >
+                            <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1.5}>
+                              <Stack direction="row" spacing={1.5} alignItems="center">
+                                {/* Avatar */}
+                                <Box
+                                  sx={{
+                                    width: 46,
+                                    height: 46,
+                                    borderRadius: "50%",
+                                    flexShrink: 0,
+                                    display: "grid",
+                                    placeItems: "center",
+                                    color: "#fff",
+                                    fontWeight: 700,
+                                    fontSize: "0.875rem",
+                                    background: (theme) =>
+                                      isSelected
+                                        ? `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`
+                                        : `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.7)} 0%, ${theme.palette.primary.main} 100%)`,
+                                    boxShadow: (theme) =>
+                                      isSelected
+                                        ? `0 3px 10px ${alpha(theme.palette.primary.main, 0.38)}`
+                                        : "none",
+                                    transition: "all 0.15s ease"
+                                  }}
+                                >
+                                  {initials}
+                                </Box>
+                                <Box minWidth={0}>
+                                  <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
+                                    <Typography variant="subtitle2" fontWeight={700} noWrap>
+                                      {patient.fullName}
+                                    </Typography>
+                                    {patient.mrn && (
+                                      <Chip
+                                        label={patient.mrn}
+                                        size="small"
+                                        sx={{
+                                          height: 18,
+                                          fontSize: "0.65rem",
+                                          borderRadius: 999,
+                                          fontWeight: 700,
+                                          backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                                          color: "primary.main",
+                                          border: "none",
+                                          "& .MuiChip-label": { px: 0.75 }
+                                        }}
+                                      />
+                                    )}
+                                  </Stack>
+                                  <Typography variant="caption" color="text.secondary">
+                                    {patient.age ? `${patient.age}Y` : "—"} • {patient.gender || "—"} • {patient.phone}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                              {/* Selection indicator */}
+                              {isSelected ? (
+                                <CheckCircleRoundedIcon
+                                  color="primary"
+                                  sx={{ fontSize: 22, flexShrink: 0 }}
+                                />
+                              ) : (
+                                <Box
+                                  sx={{
+                                    width: 20,
+                                    height: 20,
+                                    flexShrink: 0,
+                                    borderRadius: "50%",
+                                    border: (theme) => `2px solid ${theme.palette.divider}`,
+                                    transition: "border-color 0.15s ease"
+                                  }}
+                                />
+                              )}
+                            </Stack>
+                          </Box>
+                        );
+                      })
                     )}
                   </Stack>
                 </Box>
               </>
-            ) : (
-              modalStep === "create" ? (
-                <>
-                <Box sx={{ px: { xs: 2, sm: 3 }, pb: 1.25 }}>
-                  <Button startIcon={<ArrowBackRoundedIcon />} onClick={() => setModalStep("select")} sx={{ textTransform: "none", px: 0 }}>
+            )}
+
+            {/* ── CREATE PATIENT step ── */}
+            {modalStep === "create" && (
+              <>
+                <Box sx={{ px: { xs: 2.5, sm: 3 }, pt: 1.75, pb: 0.5 }}>
+                  <AppButton
+                    intent="neutral"
+                    startIcon={<ArrowBackRoundedIcon />}
+                    onClick={() => setModalStep("select")}
+                  >
                     Back to search
-                  </Button>
+                  </AppButton>
                 </Box>
-                <Stack spacing={1.25} sx={{ px: { xs: 2, sm: 3 }, pb: 1.25 }}>
+                <Stack spacing={1.25} sx={{ px: { xs: 2.5, sm: 3 }, pb: 1.5 }}>
                   <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
                     <TextField
                       label="First Name *"
@@ -1087,184 +1457,276 @@ export default function AppShell({ title, subtitle, children, active }: AppShell
                     control={
                       <Checkbox
                         checked={patientForm.consent}
-                        onChange={(event) => setPatientForm((prev) => ({ ...prev, consent: event.target.checked }))}
+                        onChange={(event) =>
+                          setPatientForm((prev) => ({ ...prev, consent: event.target.checked }))
+                        }
+                        color="primary"
                       />
                     }
-                    label="Consent received"
+                    label={
+                      <Typography variant="body2" fontWeight={600}>
+                        Patient consent received
+                      </Typography>
+                    }
                   />
                   {patientFormError ? (
-                    <Typography variant="caption" color="error.main">
-                      {patientFormError}
-                    </Typography>
+                    <Box
+                      sx={{
+                        p: 1.25,
+                        borderRadius: 2,
+                        backgroundColor: (theme) => alpha(theme.palette.error.main, 0.08),
+                        border: (theme) => `1px solid ${alpha(theme.palette.error.main, 0.3)}`
+                      }}
+                    >
+                      <Typography variant="caption" color="error.main" fontWeight={600}>
+                        {patientFormError}
+                      </Typography>
+                    </Box>
                   ) : null}
                 </Stack>
-                </>
-              ) : modalStep === "mode" ? (
-                <Stack spacing={1.25} sx={{ px: { xs: 2, sm: 3 }, pb: 1.25 }}>
+              </>
+            )}
+
+            {/* ── MODE step ── */}
+            {modalStep === "mode" && (
+              <Stack spacing={1.5} sx={{ px: { xs: 2.5, sm: 3 }, pt: 2, pb: 1.5 }}>
+                {/* Selected patient banner */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.5,
+                    p: 1.5,
+                    borderRadius: 2.5,
+                    backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.06),
+                    border: (theme) => `1.5px solid ${alpha(theme.palette.primary.main, 0.2)}`
+                  }}
+                >
                   <Box
                     sx={{
-                      border: (theme) => `1.5px solid ${alpha(theme.palette.primary.main, 0.28)}`,
-                      backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.06),
-                      borderRadius: 2,
-                      px: 1.5,
-                      py: 1.2
-                    }}
-                  >
-                    <Typography variant="subtitle2" fontWeight={700}>
-                      {selectedPatient?.fullName || "Selected patient"}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {selectedPatient ? `${selectedPatient.age}Y • ${selectedPatient.gender}` : ""}
-                    </Typography>
-                  </Box>
-                  <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25}>
-                    <Box
-                      onClick={() => setSelectedMode("record")}
-                      sx={{
-                        flex: 1,
-                        borderRadius: 2,
-                        border: (theme) =>
-                          `2px solid ${
-                            selectedMode === "record" ? theme.palette.primary.main : theme.palette.divider
-                          }`,
-                        backgroundColor: (theme) =>
-                          selectedMode === "record"
-                            ? alpha(theme.palette.primary.main, 0.08)
-                            : theme.palette.background.paper,
-                        p: 2,
-                        textAlign: "center",
-                        cursor: "pointer"
-                      }}
-                    >
-                      <Typography variant="h6">Live Recording</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Record consultation in real-time
-                      </Typography>
-                    </Box>
-                    <Box
-                      onClick={() => setSelectedMode("upload")}
-                      sx={{
-                        flex: 1,
-                        borderRadius: 2,
-                        border: (theme) =>
-                          `2px solid ${
-                            selectedMode === "upload" ? theme.palette.primary.main : theme.palette.divider
-                          }`,
-                        backgroundColor: (theme) =>
-                          selectedMode === "upload"
-                            ? alpha(theme.palette.primary.main, 0.08)
-                            : theme.palette.background.paper,
-                        p: 2,
-                        textAlign: "center",
-                        cursor: "pointer"
-                      }}
-                    >
-                      <Typography variant="h6">Upload Audio</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Upload a pre-recorded audio file
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </Stack>
-              ) : (
-                <Stack spacing={1.25} sx={{ px: { xs: 2, sm: 3 }, pb: 2.5, pt: 0.5, alignItems: "center" }}>
-                  <Box
-                    sx={{
-                      width: 74,
-                      height: 74,
+                      width: 40,
+                      height: 40,
                       borderRadius: "50%",
+                      flexShrink: 0,
                       display: "grid",
                       placeItems: "center",
+                      fontWeight: 700,
+                      fontSize: "0.8rem",
                       color: "#fff",
-                      background: "linear-gradient(135deg, #1A7DC4, #4FACFE)",
-                      boxShadow: (theme) => `0 8px 22px ${alpha(theme.palette.primary.main, 0.35)}`
+                      background: (theme) =>
+                        `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`
                     }}
                   >
-                    <ArrowForwardRoundedIcon />
+                    {selectedPatient?.fullName
+                      .split(" ")
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .map((p) => p[0])
+                      .join("")
+                      .toUpperCase() || "PT"}
                   </Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Preparing consultation workspace...
-                  </Typography>
-                  <Box
+                  <Box flex={1} minWidth={0}>
+                    <Typography variant="subtitle2" fontWeight={700} noWrap>
+                      {selectedPatient?.fullName || "Selected patient"}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {selectedPatient ? `${selectedPatient.age}Y • ${selectedPatient.gender} • ${selectedPatient.phone}` : ""}
+                    </Typography>
+                  </Box>
+                  <Chip
+                    label="Selected"
+                    size="small"
+                    icon={<CheckCircleRoundedIcon sx={{ fontSize: "13px !important" }} />}
                     sx={{
-                      width: "100%",
-                      height: 6,
+                      height: 24,
+                      fontWeight: 700,
+                      fontSize: "0.7rem",
                       borderRadius: 999,
-                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
-                      overflow: "hidden"
+                      backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.12),
+                      color: "primary.main",
+                      border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
+                      "& .MuiChip-icon": { color: "primary.main" }
+                    }}
+                  />
+                </Box>
+
+                {/* Mode cards */}
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25}>
+                  {/* Live Recording */}
+                  <Box
+                    onClick={() => setSelectedMode("record")}
+                    sx={{
+                      flex: 1,
+                      position: "relative",
+                      borderRadius: 2.5,
+                      border: (theme) =>
+                        `2px solid ${
+                          selectedMode === "record" ? theme.palette.primary.main : theme.palette.divider
+                        }`,
+                      backgroundColor: (theme) =>
+                        selectedMode === "record"
+                          ? alpha(theme.palette.primary.main, 0.07)
+                          : theme.palette.background.paper,
+                      p: 2.5,
+                      textAlign: "center",
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                      "&:hover": {
+                        borderColor: (theme) => alpha(theme.palette.primary.main, 0.6),
+                        backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.04),
+                        transform: "translateY(-2px)",
+                        boxShadow: (theme) => `0 6px 16px ${alpha(theme.palette.primary.main, 0.12)}`
+                      }
                     }}
                   >
+                    {selectedMode === "record" && (
+                      <CheckCircleRoundedIcon
+                        color="primary"
+                        sx={{ position: "absolute", top: 10, right: 10, fontSize: 18 }}
+                      />
+                    )}
                     <Box
                       sx={{
-                        width: "70%",
-                        height: "100%",
-                        borderRadius: 999,
-                        background: "linear-gradient(90deg, #1A7DC4, #4FACFE)"
+                        width: 52,
+                        height: 52,
+                        borderRadius: 2.5,
+                        display: "grid",
+                        placeItems: "center",
+                        mx: "auto",
+                        mb: 1.5,
+                        border: (theme) =>
+                          `1px solid ${alpha(theme.palette.primary.main, selectedMode === "record" ? 0.35 : 0.2)}`,
+                        backgroundColor: (theme) =>
+                          alpha(theme.palette.primary.main, selectedMode === "record" ? 0.16 : 0.08),
+                        color: "primary.main",
+                        transition: "all 0.15s ease"
                       }}
-                    />
+                    >
+                      <MicNoneOutlinedIcon />
+                    </Box>
+                    <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+                      Live Recording
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      Record consultation in real-time
+                    </Typography>
+                  </Box>
+
+                  {/* Upload Audio */}
+                  <Box
+                    onClick={() => setSelectedMode("upload")}
+                    sx={{
+                      flex: 1,
+                      position: "relative",
+                      borderRadius: 2.5,
+                      border: (theme) =>
+                        `2px solid ${
+                          selectedMode === "upload" ? theme.palette.primary.main : theme.palette.divider
+                        }`,
+                      backgroundColor: (theme) =>
+                        selectedMode === "upload"
+                          ? alpha(theme.palette.primary.main, 0.07)
+                          : theme.palette.background.paper,
+                      p: 2.5,
+                      textAlign: "center",
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                      "&:hover": {
+                        borderColor: (theme) => alpha(theme.palette.primary.main, 0.6),
+                        backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.04),
+                        transform: "translateY(-2px)",
+                        boxShadow: (theme) => `0 6px 16px ${alpha(theme.palette.primary.main, 0.12)}`
+                      }
+                    }}
+                  >
+                    {selectedMode === "upload" && (
+                      <CheckCircleRoundedIcon
+                        color="primary"
+                        sx={{ position: "absolute", top: 10, right: 10, fontSize: 18 }}
+                      />
+                    )}
+                    <Box
+                      sx={{
+                        width: 52,
+                        height: 52,
+                        borderRadius: 2.5,
+                        display: "grid",
+                        placeItems: "center",
+                        mx: "auto",
+                        mb: 1.5,
+                        border: (theme) =>
+                          `1px solid ${alpha(theme.palette.primary.main, selectedMode === "upload" ? 0.35 : 0.2)}`,
+                        backgroundColor: (theme) =>
+                          alpha(theme.palette.primary.main, selectedMode === "upload" ? 0.16 : 0.08),
+                        color: "primary.main",
+                        transition: "all 0.15s ease"
+                      }}
+                    >
+                      <FileUploadOutlinedIcon />
+                    </Box>
+                    <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+                      Upload Audio
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      Upload a pre-recorded audio file
+                    </Typography>
                   </Box>
                 </Stack>
-              )
+              </Stack>
             )}
-            {modalStep !== "processing" ? <Divider /> : null}
-            {modalStep !== "processing" ? (
-            <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: 1.25, gap: 1.2, justifyContent: "space-between" }}>
-              {modalStep === "select" ? (
-                <>
-                  <AppButton intent="neutral" onClick={closeStartConsultDialog}>
-                    Cancel
-                  </AppButton>
-                  <Stack direction="row" spacing={1.5}>
-                    <AppButton
-                      intent="secondary"
-                      startIcon={<AddIcon />}
-                      onClick={() => setModalStep("create")}
-                    >
-                      Create Patient
-                    </AppButton>
-                    <AppButton
-                      intent="primary"
-                      endIcon={<ArrowForwardRoundedIcon />}
-                      onClick={handleContinueWithSelectedPatient}
-                      disabled={!selectedPatient}
-                    >
-                      Continue
-                    </AppButton>
-                  </Stack>
-                </>
-              ) : modalStep === "create" ? (
-                <>
-                  <AppButton intent="neutral" onClick={() => setModalStep("select")}>
-                    Back
-                  </AppButton>
-                  <AppButton
-                    intent="primary"
-                    endIcon={<ArrowForwardRoundedIcon />}
-                    onClick={handleCreatePatientAndContinue}
+
+            {/* ── PROCESSING step ── */}
+            {modalStep === "processing" && (
+              <Stack spacing={2} sx={{ px: { xs: 2.5, sm: 3 }, py: 4, alignItems: "center" }}>
+                <Box sx={{ position: "relative", display: "inline-flex" }}>
+                  <CircularProgress
+                    size={72}
+                    thickness={2.5}
+                    sx={{ color: "primary.main" }}
+                  />
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      inset: 0,
+                      display: "grid",
+                      placeItems: "center",
+                      color: "primary.main"
+                    }}
                   >
-                    Create &amp; Continue
-                  </AppButton>
-                </>
-              ) : (
-                <>
-                  <AppButton intent="neutral" onClick={() => setModalStep("select")}>
-                    Back
-                  </AppButton>
-                  <AppButton
-                    intent="primary"
-                    endIcon={<ArrowForwardRoundedIcon />}
-                    onClick={handleStartConsultFlow}
-                    disabled={!selectedMode}
-                  >
-                    {selectedMode === "upload" ? "Select File" : "Start Recording"}
-                  </AppButton>
-                </>
-              )}
-            </DialogActions>
-            ) : null}
-          </Stack>
-        </DialogContent>
-      </Dialog>
+                    <AutoAwesomeRoundedIcon fontSize="small" />
+                  </Box>
+                </Box>
+                <Box textAlign="center">
+                  <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+                    Setting up your scribe
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Connecting AI transcription engine...
+                  </Typography>
+                </Box>
+                <Box
+                  sx={{
+                    width: "100%",
+                    height: 5,
+                    borderRadius: 999,
+                    backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.12),
+                    overflow: "hidden"
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: "72%",
+                      height: "100%",
+                      borderRadius: 999,
+                      background: (theme) =>
+                        `linear-gradient(90deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`
+                    }}
+                  />
+                </Box>
+              </Stack>
+            )}
+
+      </AppDialog>
     </PageRoot>
   );
 }

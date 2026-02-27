@@ -39,30 +39,139 @@
       "mrn": "MRN-1002"
     },
     {
+      "id": 3,
       "fullName": "Rinku",
       "age": null,
       "gender": "sup",
       "phone": "09608610873",
       "address": "It Park",
       "aadhaar": "",
-      "mrn": "7045348191",
-      "id": 3
+      "mrn": "7045348191"
+    },
+    {
+      "id": 4,
+      "fullName": "Neha Kapoor",
+      "age": 28,
+      "gender": "Female",
+      "phone": "9988776655",
+      "address": "Delhi",
+      "aadhaar": "3456-7890-1234",
+      "mrn": "MRN-1003"
+    },
+    {
+      "id": 5,
+      "fullName": "Mehul Gupta",
+      "age": 45,
+      "gender": "Male",
+      "phone": "8877665544",
+      "address": "Ahmedabad",
+      "aadhaar": "4567-8901-2345",
+      "mrn": "MRN-1004"
+    },
+    {
+      "id": 6,
+      "fullName": "Priya Desai",
+      "age": 61,
+      "gender": "Female",
+      "phone": "7788990011",
+      "address": "Pune",
+      "aadhaar": "5678-9012-3456",
+      "mrn": "MRN-1005"
     }
   ],
   "consultations": [
     {
       "id": 1,
       "patientId": 1,
-      "startedAt": "2025-12-10T09:15:00.000Z",
-      "status": "Draft",
-      "summary": "Follow-up visit for persistent cough."
+      "startedAt": "2026-02-05T09:15:00.000Z",
+      "status": "Review",
+      "summary": "Patient presents with progressive dyspnea on exertion, decreased rescue inhaler efficacy. BP 152/86. COPD exacerbation suspected.",
+      "codes": ["J44.1", "I10"],
+      "duration": "2:34",
+      "soapNote": {
+        "subjective": "Patient reports worsening breathlessness over the past 2 weeks. Increased use of salbutamol inhaler with reduced effect. Denies fever or chest pain. Past history of COPD diagnosed 3 years ago.",
+        "objective": "BP 152/86 mmHg, HR 92 bpm, SpO2 94% on room air. Chest: diffuse expiratory wheeze bilaterally. Accessory muscle use noted.",
+        "assessment": "COPD exacerbation (J44.1) with concurrent hypertension (I10). Rescue inhaler efficacy reduced — consider step-up therapy.",
+        "plan": "Increase budesonide/formoterol to high-dose. Add short course oral prednisolone 40mg for 5 days. Review in 1 week or sooner if worsening. Spirometry booked."
+      },
+      "medications": [
+        { "name": "Budesonide/Formoterol", "dose": "400/12 mcg", "frequency": "BD", "type": "New" },
+        { "name": "Prednisolone", "dose": "40 mg", "frequency": "OD x 5 days", "type": "New" },
+        { "name": "Salbutamol MDI", "dose": "100 mcg", "frequency": "PRN", "type": "Current" }
+      ]
     },
     {
       "id": 2,
       "patientId": 2,
-      "startedAt": "2025-12-11T14:40:00.000Z",
-      "status": "Final",
-      "summary": "Hypertension review and medication adjustment."
+      "startedAt": "2026-02-04T14:40:00.000Z",
+      "status": "Signed",
+      "summary": "Follow-up for type 2 diabetes and hypertension. HbA1c 7.8%. Medication adjustment discussed, metformin dose increased.",
+      "codes": ["E11", "I10"],
+      "duration": "4:12",
+      "soapNote": {
+        "subjective": "Patient reports occasional post-prandial blood sugar spikes. No hypoglycaemic episodes. BP controlled on current medication. Diet largely compliant.",
+        "objective": "BP 134/84 mmHg. Weight 82 kg (stable). HbA1c 7.8% (target <7%). FBS 142 mg/dL.",
+        "assessment": "Type 2 diabetes (E11) — suboptimal glycaemic control. Hypertension (I10) — adequately controlled on current regimen.",
+        "plan": "Increase metformin to 1g BD. Add sitagliptin 50mg OD. Lifestyle counselling reinforced. Repeat HbA1c in 3 months."
+      },
+      "medications": [
+        { "name": "Metformin", "dose": "1000 mg", "frequency": "BD", "type": "New" },
+        { "name": "Sitagliptin", "dose": "50 mg", "frequency": "OD", "type": "New" },
+        { "name": "Amlodipine", "dose": "5 mg", "frequency": "OD", "type": "Current" }
+      ]
+    },
+    {
+      "id": 3,
+      "patientId": 4,
+      "startedAt": "2026-02-03T11:05:00.000Z",
+      "status": "Signed",
+      "summary": "Asthma follow-up. Symptoms well-controlled on current regimen. Peak flow 380 L/min. Advised to continue budesonide.",
+      "codes": ["J45.20"],
+      "duration": "1:48",
+      "soapNote": {
+        "subjective": "Patient reports good asthma control over past 3 months. No nocturnal symptoms. No emergency visits. Using preventer inhaler regularly.",
+        "objective": "PEFR 380 L/min (85% predicted). Lungs clear on auscultation. No accessory muscle use.",
+        "assessment": "Asthma (J45.20) — well controlled. Continue current therapy.",
+        "plan": "Continue budesonide 200 mcg BD. Reinforce correct inhaler technique. Review in 6 months or PRN."
+      },
+      "medications": [
+        { "name": "Budesonide", "dose": "200 mcg", "frequency": "BD", "type": "Current" },
+        { "name": "Salbutamol MDI", "dose": "100 mcg", "frequency": "PRN", "type": "Current" }
+      ]
+    },
+    {
+      "id": 4,
+      "patientId": 5,
+      "startedAt": "2026-02-02T15:40:00.000Z",
+      "status": "Processing",
+      "summary": "Acute bronchitis. Productive cough for 5 days. Afebrile. Chest clear. No antibiotics indicated at this time.",
+      "codes": ["J20.9"],
+      "duration": "2:05",
+      "soapNote": {
+        "subjective": "Productive cough for 5 days, yellow sputum. No fever. Mild sore throat. No dyspnoea. No sick contacts.",
+        "objective": "Temperature 37.1°C. Chest clear to auscultation. No wheeze or crackles.",
+        "assessment": "Acute bronchitis (J20.9) — likely viral. No features warranting antibiotic therapy.",
+        "plan": "Supportive management: adequate fluids, steam inhalation, honey-based lozenges. Review if fever develops or symptoms persist beyond 10 days."
+      },
+      "medications": [
+        { "name": "Paracetamol", "dose": "500 mg", "frequency": "TDS PRN", "type": "New" }
+      ]
+    },
+    {
+      "id": 5,
+      "patientId": 6,
+      "startedAt": "2026-01-30T09:30:00.000Z",
+      "status": "Signed",
+      "summary": "Colon polyp follow-up. Colonoscopy result reviewed. No new polyps identified. Repeat in 3 years recommended.",
+      "codes": ["K63.5"],
+      "duration": "3:20",
+      "soapNote": {
+        "subjective": "Patient reports no GI symptoms. Colonoscopy performed last week — no new polyps found. Previous tubular adenoma removed 3 years ago.",
+        "objective": "Abdomen soft, non-tender. No masses palpable. Colonoscopy report: normal mucosa, no polyps.",
+        "assessment": "History of colonic polyp (K63.5) — currently clear on surveillance colonoscopy.",
+        "plan": "Routine surveillance colonoscopy in 3 years. High-fibre diet advised. No medications changed."
+      },
+      "medications": []
     }
   ],
   "guestAttempts": [],
